@@ -1,0 +1,5 @@
+org.opendaylight.controller.config.yang.test.impl.TestImplModuleFactory
+org.opendaylight.controller.config.yang.test.impl.IdentityTestModuleFactory
+org.opendaylight.controller.config.yang.test.impl.DepTestImplModuleFactory
+org.opendaylight.controller.config.yang.test.impl.MultipleDependenciesModuleFactory
+org.opendaylight.controller.config.yang.test.impl.NetconfTestImplModuleFactory

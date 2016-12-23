@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>config-test-impl</title>
+  </head>
+  <body>
+    <h1>config-test-impl</h1>
+    
+    <h2>Base Information</h2>
+    <table>
+        <tr>
+            <td><strong>prefix</strong></td>
+            <td>it-impl</td>
+        </tr>
+        <tr>
+            <td><strong>namespace</strong></td>
+            <td>urn:opendaylight:params:xml:ns:yang:controller:test:impl</td>
+        </tr>
+        <tr>
+            <td><strong>revision</strong></td>
+            <td>2013-04-03</td>
+        </tr>
+        <tr>
+            <td><strong>description</strong></td>
+            <td>Testing IMPL</td>
+        </tr>
+        <tr>
+            <td><strong>yang-version</strong></td>
+            <td>1</td>
+        </tr>
+        <tr>
+    <td><strong>imports</strong></td><td>        tt:test-types 2013-11-27;
+            test:config-test 2013-06-13;
+            inet:ietf-inet-types 2010-09-24;
+            config:config 2013-04-05;
+            rpcx:rpc-context 2013-06-17;
+    </td>    </tr>
+    </table>
+    
+    <h3>Identities Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#complex-output-rpc"><strong>complex-output-rpc</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#impl"><strong>impl</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#impl-dep"><strong>impl-dep</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#impl-identity-test"><strong>impl-identity-test</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#impl-netconf"><strong>impl-netconf</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#inner-inner-test-rpc"><strong>inner-inner-test-rpc</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#inner-test-rpc"><strong>inner-test-rpc</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#multiple-dependencies"><strong>multiple-dependencies</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#test-rpc"><strong>test-rpc</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+    <h3>Augmentations Summary</h3>
+    <table>
+        <tr>
+            <th>Target</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:configuration/(case)impl-identity-test"><strong>/config:modules/config:module/config:configuration/(case)impl-identity-test</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:state/(case)impl-identity-test"><strong>/config:modules/config:module/config:state/(case)impl-identity-test</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:configuration/(case)impl"><strong>/config:modules/config:module/config:configuration/(case)impl</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:state/(case)impl"><strong>/config:modules/config:module/config:state/(case)impl</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:configuration/(case)impl-dep"><strong>/config:modules/config:module/config:configuration/(case)impl-dep</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:configuration/(case)impl-netconf"><strong>/config:modules/config:module/config:configuration/(case)impl-netconf</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:state/(case)impl-netconf"><strong>/config:modules/config:module/config:state/(case)impl-netconf</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:configuration/(case)multiple-dependencies"><strong>/config:modules/config:module/config:configuration/(case)multiple-dependencies</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+    <h3>RPCs Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#container-output"><strong>container-output</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#leaf-list-output"><strong>leaf-list-output</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#list-output"><strong>list-output</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#no-arg"><strong>no-arg</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#noArgInner"><strong>noArgInner</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#noArgInnerInner"><strong>noArgInnerInner</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+    
+    
+    <h2>Identities</h2>
+    <ul>
+    <li>
+        <h3 id="complex-output-rpc">complex-output-rpc</h3>
+        <ul>
+        </ul>
+    </li>
+    <li>
+        <h3 id="impl">impl</h3>
+        <ul>
+        <li>
+            base: module-type
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="impl-dep">impl-dep</h3>
+        <ul>
+        <li>
+            base: module-type
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="impl-identity-test">impl-identity-test</h3>
+        <ul>
+        <li>
+            base: module-type
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="impl-netconf">impl-netconf</h3>
+        <ul>
+        <li>
+            base: module-type
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="inner-inner-test-rpc">inner-inner-test-rpc</h3>
+        <ul>
+        </ul>
+    </li>
+    <li>
+        <h3 id="inner-test-rpc">inner-test-rpc</h3>
+        <ul>
+        </ul>
+    </li>
+    <li>
+        <h3 id="multiple-dependencies">multiple-dependencies</h3>
+        <ul>
+        <li>
+            base: module-type
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="test-rpc">test-rpc</h3>
+        <ul>
+        </ul>
+    </li>
+    </ul>
+    
+    
+    
+    
+    
+    <h2>Augmentations</h2>
+    
+    <ul>
+    <li>
+        <h3 id="/config:modules/config:module/config:configuration/(case)impl-identity-test">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:configuration/(case)impl-identity-test]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-identity-test">
+            case: impl-identity-test
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'impl-identity-test'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: afi
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)identityref
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-identity-test/identities-container">
+            container: identities-container
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: afi
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)identityref
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-identity-test/identities">
+            list: identities
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: afi
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)identityref
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: safi
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)identityref
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-identity-test/identities/identities-inner">
+            container: identities-inner
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: afi
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)identityref
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    <li>
+        <h3 id="/config:modules/config:module/config:state/(case)impl-identity-test">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:state/(case)impl-identity-test]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-identity-test">
+            case: impl-identity-test
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'impl-identity-test'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    <li>
+        <h3 id="/config:modules/config:module/config:configuration/(case)impl">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:configuration/(case)impl]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl">
+            case: impl
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'impl'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf-list: allow-user
+        </li>
+        </strong>
+        <ul>
+        <li>
+            description: A list of user name patterns to allow
+        </li>
+        <li>
+            type: string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl/dto-a">
+            container: dto-a
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-arg
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        <li>
+            default: 1
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: port
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:ietf-inet-types)port-number
+        </li>
+        <li>
+            default: 8080
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: ip4
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:ietf-inet-types)ipv4-address
+        </li>
+        <li>
+            default: 127.0.0.1
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: as-number
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:ietf-inet-types)as-number
+        </li>
+        <li>
+            default: 44
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simpleInt
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        <li>
+            default: 99
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl/dto_b">
+            container: dto_b
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int1
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        <li>
+            default: 32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int2
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    <li>
+        <h3 id="/config:modules/config:module/config:state/(case)impl">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:state/(case)impl]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl">
+            case: impl
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'impl'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: created-sessions
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    <li>
+        <h3 id="/config:modules/config:module/config:configuration/(case)impl-dep">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:configuration/(case)impl-dep]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-dep">
+            case: impl-dep
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'impl-dep'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    <li>
+        <h3 id="/config:modules/config:module/config:configuration/(case)impl-netconf">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:configuration/(case)impl-netconf]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf">
+            case: impl-netconf
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'impl-netconf'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf">
+            container: impl-netconf
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: binaryLeaf
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)binary
+        </li>
+        <li>
+            default: ZGVmYXVsdEJpbg==
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: type
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        <li>
+            default: default-string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: extended
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:opendaylight:params:xml:ns:yang:controller:config:test:types)extend-once
+        </li>
+        <li>
+            default: 1
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: extended-twice
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:opendaylight:params:xml:ns:yang:controller:config:test:types)extend-twice
+        </li>
+        <li>
+            default: 2
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: extended-enum
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:opendaylight:params:xml:ns:yang:controller:config:test:types)extend-enum
+        </li>
+        <li>
+            default: ONE
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: ip
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:ietf-inet-types)ip-address
+        </li>
+        <li>
+            default: 0:0:0:0:0:0:0:1
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: union-test-attr
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:opendaylight:params:xml:ns:yang:controller:config:test:types)unionTest
+        </li>
+        <li>
+            default: 456
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: sleep-factor
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)decimal64
+        </li>
+        <li>
+            default: 2.00
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/dto-c">
+            container: dto-c
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-arg
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/dto-c/dto-a-inner">
+            container: dto-a-inner
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-arg
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/dto-c/dto-a-inner/dto-a-inner-inner">
+            container: dto-a-inner-inner
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-arg
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simpleInt
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simpleBoolean
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)boolean
+        </li>
+        <li>
+            default: false
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-long
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)int64
+        </li>
+        <li>
+            default: -45
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-long-2
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        <li>
+            default: 445
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-BigInteger
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint64
+        </li>
+        <li>
+            default: 545454
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-byte
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)int8
+        </li>
+        <li>
+            default: -4
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-short
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint8
+        </li>
+        <li>
+            default: 45
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-test
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        <li>
+            default: 99
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf-list: simple-list
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: uint16
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/dto_d">
+            container: dto_d
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int1
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int2
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int3
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf-list: simple-list
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: uint16
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/dto_d/complex-dto-bInner">
+            list: complex-dto-bInner
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf-list: simple-list
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: uint16
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int3
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/dto_d/complex-dto-bInner/deep">
+            container: deep
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int3
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        <li>
+            default: 0
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/complex-list">
+            list: complex-list
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/complex-list/simple-list">
+            list: simple-list
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int3
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/peers">
+            list: peers
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: port
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: core-size
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int3
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/testing-dep">
+            container: testing-dep
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        <strong><li>
+            uses: (urn:opendaylight:params:xml:ns:yang:controller:config)service-ref
+        </li>
+        </strong>
+        <ul>
+        <li>refines:
+            <ul>
+            <li>
+                node name: type
+            </li>
+            </ul>
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: type
+        </li>
+        </strong>
+        <ul>
+        <li>
+            description: Type of the service being referenced. Users of this grouping
+                             should refine this leaf with required-identity pointing to
+                             the actual service-type which is actually required.
+        </li>
+        <li>
+            type: (urn:opendaylight:params:xml:ns:yang:controller:config)service-type-ref
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: name
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)leafref
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/impl-netconf/impl-netconf/testing-deps">
+            list: testing-deps
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        <strong><li>
+            uses: (urn:opendaylight:params:xml:ns:yang:controller:config)service-ref
+        </li>
+        </strong>
+        <ul>
+        <li>refines:
+            <ul>
+            <li>
+                node name: type
+            </li>
+            </ul>
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: type
+        </li>
+        </strong>
+        <ul>
+        <li>
+            description: Type of the service being referenced. Users of this grouping
+                             should refine this leaf with required-identity pointing to
+                             the actual service-type which is actually required.
+        </li>
+        <li>
+            type: (urn:opendaylight:params:xml:ns:yang:controller:config)service-type-ref
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: name
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)leafref
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    <li>
+        <h3 id="/config:modules/config:module/config:state/(case)impl-netconf">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:state/(case)impl-netconf]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf">
+            case: impl-netconf
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'impl-netconf'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf">
+            container: impl-netconf
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: created-sessions
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf/asdf">
+            container: asdf
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simpleInt
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simpleString
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf/inner-running-data-additional">
+            list: inner-running-data-additional
+        </li>
+        </strong>
+        <ul>
+        <li>
+            key definition: simpleString
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int3
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: simpleString
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf/inner-running-data-additional/deep4">
+            container: deep4
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: boool
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)boolean
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf/inner-running-data">
+            list: inner-running-data
+        </li>
+        </strong>
+        <ul>
+        <li>
+            key definition: simple-int3
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int3
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf/inner-running-data/deep2">
+            container: deep2
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: boool
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)boolean
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf/inner-running-data/inner-inner-running-data">
+            list: inner-inner-running-data
+        </li>
+        </strong>
+        <ul>
+        <li>
+            key definition: simple-int3
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: simple-int3
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint16
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf-list: list-of-strings
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf/inner-running-data/inner-inner-running-data/not-state-bean">
+            list: not-state-bean
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: element
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf/inner-running-data/inner-inner-running-data/not-state-bean/not-state-bean-internal">
+            list: not-state-bean-internal
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: element2
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/impl-netconf/impl-netconf/inner-running-data/inner-inner-running-data/deep3">
+            container: deep3
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: boool
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)boolean
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    <li>
+        <h3 id="/config:modules/config:module/config:configuration/(case)multiple-dependencies">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:configuration/(case)multiple-dependencies]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/multiple-dependencies">
+            case: multiple-dependencies
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'multiple-dependencies'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/multiple-dependencies/multiple-dependencies">
+            container: multiple-dependencies
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/multiple-dependencies/multiple-dependencies/testing-deps">
+            list: testing-deps
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        <strong><li>
+            uses: (urn:opendaylight:params:xml:ns:yang:controller:config)service-ref
+        </li>
+        </strong>
+        <ul>
+        <li>refines:
+            <ul>
+            <li>
+                node name: type
+            </li>
+            </ul>
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: type
+        </li>
+        </strong>
+        <ul>
+        <li>
+            description: Type of the service being referenced. Users of this grouping
+                             should refine this leaf with required-identity pointing to
+                             the actual service-type which is actually required.
+        </li>
+        <li>
+            type: (urn:opendaylight:params:xml:ns:yang:controller:config)service-type-ref
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: name
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)leafref
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    </ul>
+    
+    <h2>RPC Definitions</h2>
+    <h3 id="container-output">container-output
+    </h3>
+        <ul>
+            <ul>
+            <strong>
+            <li id="container-output/input">
+                container: input
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            <strong><li>
+                uses: (urn:ietf:params:xml:ns:yang:rpc-context)rpc-context-ref
+            </li>
+            </strong>
+            <ul>
+            <li>refines:
+                <ul>
+                <li>
+                    node name: context-instance
+                </li>
+                </ul>
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: context-instance
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Pointer to the context. 
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)instance-identifier
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            <ul>
+            <strong>
+            <li id="container-output/output">
+                container: output
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong>
+            <li id="container-output/output/retValContainer">
+                container: retValContainer
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: v1
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)string
+            </li>
+            <li>
+                default: from rpc
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: v2
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)uint32
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+        </ul>
+    <h3 id="leaf-list-output">leaf-list-output
+    </h3>
+        <ul>
+            <ul>
+            <strong>
+            <li id="leaf-list-output/input">
+                container: input
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            <strong><li>
+                uses: (urn:ietf:params:xml:ns:yang:rpc-context)rpc-context-ref
+            </li>
+            </strong>
+            <ul>
+            <li>refines:
+                <ul>
+                <li>
+                    node name: context-instance
+                </li>
+                </ul>
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: context-instance
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Pointer to the context. 
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)instance-identifier
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            <ul>
+            <strong>
+            <li id="leaf-list-output/output">
+                container: output
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf-list: result
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: string
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+        </ul>
+    <h3 id="list-output">list-output
+    </h3>
+        <ul>
+            <ul>
+            <strong>
+            <li id="list-output/input">
+                container: input
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            <strong><li>
+                uses: (urn:ietf:params:xml:ns:yang:rpc-context)rpc-context-ref
+            </li>
+            </strong>
+            <ul>
+            <li>refines:
+                <ul>
+                <li>
+                    node name: context-instance
+                </li>
+                </ul>
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: context-instance
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Pointer to the context. 
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)instance-identifier
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            <ul>
+            <strong>
+            <li id="list-output/output">
+                container: output
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong>
+            <li id="list-output/output/ret-val-list">
+                list: ret-val-list
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: v2
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)uint32
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: v1
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)boolean
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+        </ul>
+    <h3 id="no-arg">no-arg
+    </h3>
+        <ul>
+            <ul>
+            <strong>
+            <li id="no-arg/input">
+                container: input
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            <strong><li>
+                uses: (urn:ietf:params:xml:ns:yang:rpc-context)rpc-context-ref
+            </li>
+            </strong>
+            <ul>
+            <li>refines:
+                <ul>
+                <li>
+                    node name: context-instance
+                </li>
+                </ul>
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: context-instance
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Pointer to the context. 
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)instance-identifier
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: arg1
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)string
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            <ul>
+            <strong>
+            <li id="no-arg/output">
+                container: output
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: result
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)string
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+        </ul>
+    <h3 id="noArgInner">noArgInner
+    </h3>
+        <ul>
+            <ul>
+            <strong>
+            <li id="noArgInner/input">
+                container: input
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            <strong><li>
+                uses: (urn:ietf:params:xml:ns:yang:rpc-context)rpc-context-ref
+            </li>
+            </strong>
+            <ul>
+            <li>refines:
+                <ul>
+                <li>
+                    node name: context-instance
+                </li>
+                </ul>
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: context-instance
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Pointer to the context. 
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)instance-identifier
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            <ul>
+            </ul>
+        </ul>
+    <h3 id="noArgInnerInner">noArgInnerInner
+    </h3>
+        <ul>
+            <ul>
+            <strong>
+            <li id="noArgInnerInner/input">
+                container: input
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            <strong><li>
+                uses: (urn:ietf:params:xml:ns:yang:rpc-context)rpc-context-ref
+            </li>
+            </strong>
+            <ul>
+            <li>refines:
+                <ul>
+                <li>
+                    node name: context-instance
+                </li>
+                </ul>
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: context-instance
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Pointer to the context. 
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)instance-identifier
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: arg1
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)uint16
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: arg2
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)boolean
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            <ul>
+            <strong>
+            <li id="noArgInnerInner/output">
+                container: output
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: result
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)boolean
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+        </ul>
+    </ul>
+    
+    
+    
+  </body>
+</html>

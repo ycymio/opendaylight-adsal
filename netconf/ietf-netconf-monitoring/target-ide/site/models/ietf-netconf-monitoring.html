@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>ietf-netconf-monitoring</title>
+  </head>
+  <body>
+    <h1>ietf-netconf-monitoring</h1>
+    
+    <h2>Base Information</h2>
+    <table>
+        <tr>
+            <td><strong>prefix</strong></td>
+            <td>ncm</td>
+        </tr>
+        <tr>
+            <td><strong>namespace</strong></td>
+            <td>urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring</td>
+        </tr>
+        <tr>
+            <td><strong>revision</strong></td>
+            <td>2010-10-04</td>
+        </tr>
+        <tr>
+            <td><strong>description</strong></td>
+            <td>NETCONF Monitoring Module.
+                 All elements in this module are read-only.
+            
+                 Copyright (c) 2010 IETF Trust and the persons identified as
+                 authors of the code. All rights reserved.
+            
+                 Redistribution and use in source and binary forms, with or
+                 without modification, is permitted pursuant to, and subject
+                 to the license terms contained in, the Simplified BSD
+                 License set forth in Section 4.c of the IETF Trust's
+                 Legal Provisions Relating to IETF Documents
+                 (http://trustee.ietf.org/license-info).
+            
+                 This version of this YANG module is part of RFC 6022; see
+                 the RFC itself for full legal notices.</td>
+        </tr>
+        <tr>
+            <td><strong>yang-version</strong></td>
+            <td>1</td>
+        </tr>
+        <tr>
+    <td><strong>imports</strong></td><td>        yang:ietf-yang-types;
+            inet:ietf-inet-types;
+    </td>    </tr>
+    </table>
+    
+    <div>
+        <h3>Type Definitions Summary</h3>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>
+                <a href="#netconf-datastore-type"><strong>netconf-datastore-type</strong></a>
+                </td>
+                <td>
+                Enumeration of possible NETCONF datastore types.
+                </td>
+            </tr>
+        </table>
+    </div>
+    <h3>Identities Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#netconf-beep"><strong>netconf-beep</strong></a>
+            </td>
+            <td>
+            NETCONF over Blocks Extensible Exchange Protocol (BEEP).
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#netconf-soap-over-beep"><strong>netconf-soap-over-beep</strong></a>
+            </td>
+            <td>
+            NETCONF over Simple Object Access Protocol (SOAP) over
+                   Blocks Extensible Exchange Protocol (BEEP).
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#netconf-soap-over-https"><strong>netconf-soap-over-https</strong></a>
+            </td>
+            <td>
+            NETCONF over Simple Object Access Protocol (SOAP)
+                  over Hypertext Transfer Protocol Secure (HTTPS).
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#netconf-ssh"><strong>netconf-ssh</strong></a>
+            </td>
+            <td>
+            NETCONF over Secure Shell (SSH).
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#netconf-tls"><strong>netconf-tls</strong></a>
+            </td>
+            <td>
+            NETCONF over Transport Layer Security (TLS).
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#rnc"><strong>rnc</strong></a>
+            </td>
+            <td>
+            Relax NG Compact Syntax
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#rng"><strong>rng</strong></a>
+            </td>
+            <td>
+            Regular Language for XML Next Generation (RELAX NG).
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#schema-format"><strong>schema-format</strong></a>
+            </td>
+            <td>
+            Base identity for data model schema languages.
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#transport"><strong>transport</strong></a>
+            </td>
+            <td>
+            Base identity for NETCONF transport types.
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#xsd"><strong>xsd</strong></a>
+            </td>
+            <td>
+            W3C XML Schema Definition.
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#yang"><strong>yang</strong></a>
+            </td>
+            <td>
+            The YANG data modeling language for NETCONF.
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#yin"><strong>yin</strong></a>
+            </td>
+            <td>
+            The YIN syntax for YANG.
+            </td>
+        </tr>
+    </table>
+    <h3>Groupings Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#common-counters"><strong>common-counters</strong></a>
+            </td>
+            <td>
+            Counters that exist both per session, and also globally,
+                   accumulated from all sessions.
+            </td>
+        </tr>
+    </table>
+    <h3>Child Nodes Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#netconf-state"><strong>netconf-state</strong></a>
+            </td>
+            <td>
+            The netconf-state container is the root of the monitoring
+                   data model.
+            </td>
+        </tr>
+    </table>
+    <h3>RPCs Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#get-schema"><strong>get-schema</strong></a>
+            </td>
+            <td>
+            This operation is used to retrieve a schema from the
+                   NETCONF server.
+            
+                   Positive Response:
+                     The NETCONF server returns the requested schema.
+            
+                   Negative Response:
+                     If requested schema does not exist, the <error-tag> is
+                     'invalid-value'.
+            
+                     If more than one schema matches the requested parameters, the
+                     <error-tag> is 'operation-failed', and <error-app-tag> is
+                     'data-not-unique'.
+            </td>
+        </tr>
+    </table>
+    
+    <h2>Type Definitions</h2>
+    <ul>
+    <li>
+        <h3 id="netconf-datastore-type">netconf-datastore-type</h3>
+        <ul>
+        <li>
+            Description: Enumeration of possible NETCONF datastore types.
+        </li>
+        <li>
+            Reference: RFC 4741: NETCONF Configuration Protocol
+        </li>
+        <li>
+            Base type: (urn:ietf:params:xml:ns:yang:1)enumeration
+        </li>
+        </ul>
+    </li>
+    </ul>
+    
+    <h2>Identities</h2>
+    <ul>
+    <li>
+        <h3 id="netconf-beep">netconf-beep</h3>
+        <ul>
+        <li>
+            Description: NETCONF over Blocks Extensible Exchange Protocol (BEEP).
+        </li>
+        <li>
+            Reference: RFC 4744: Using the NETCONF Protocol over the
+                    	  Blocks Extensible Exchange Protocol (BEEP)
+        </li>
+        <li>
+            base: transport
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="netconf-soap-over-beep">netconf-soap-over-beep</h3>
+        <ul>
+        <li>
+            Description: NETCONF over Simple Object Access Protocol (SOAP) over
+                   Blocks Extensible Exchange Protocol (BEEP).
+        </li>
+        <li>
+            Reference: RFC 4743: Using NETCONF over the Simple Object
+                    	  Access Protocol (SOAP)
+        </li>
+        <li>
+            base: transport
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="netconf-soap-over-https">netconf-soap-over-https</h3>
+        <ul>
+        <li>
+            Description: NETCONF over Simple Object Access Protocol (SOAP)
+                  over Hypertext Transfer Protocol Secure (HTTPS).
+        </li>
+        <li>
+            Reference: RFC 4743: Using NETCONF over the Simple Object
+                    	  Access Protocol (SOAP)
+        </li>
+        <li>
+            base: transport
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="netconf-ssh">netconf-ssh</h3>
+        <ul>
+        <li>
+            Description: NETCONF over Secure Shell (SSH).
+        </li>
+        <li>
+            Reference: RFC 4742: Using the NETCONF Configuration Protocol
+                    	  over Secure SHell (SSH)
+        </li>
+        <li>
+            base: transport
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="netconf-tls">netconf-tls</h3>
+        <ul>
+        <li>
+            Description: NETCONF over Transport Layer Security (TLS).
+        </li>
+        <li>
+            Reference: RFC 5539: NETCONF over Transport Layer Security (TLS)
+        </li>
+        <li>
+            base: transport
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="rnc">rnc</h3>
+        <ul>
+        <li>
+            Description: Relax NG Compact Syntax
+        </li>
+        <li>
+            Reference: ISO/IEC 19757-2:2008: RELAX NG
+        </li>
+        <li>
+            base: schema-format
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="rng">rng</h3>
+        <ul>
+        <li>
+            Description: Regular Language for XML Next Generation (RELAX NG).
+        </li>
+        <li>
+            Reference: ISO/IEC 19757-2:2008: RELAX NG
+        </li>
+        <li>
+            base: schema-format
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="schema-format">schema-format</h3>
+        <ul>
+        <li>
+            Description: Base identity for data model schema languages.
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="transport">transport</h3>
+        <ul>
+        <li>
+            Description: Base identity for NETCONF transport types.
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="xsd">xsd</h3>
+        <ul>
+        <li>
+            Description: W3C XML Schema Definition.
+        </li>
+        <li>
+            Reference: W3C REC REC-xmlschema-1-20041028:
+                      XML Schema Part 1: Structures
+        </li>
+        <li>
+            base: schema-format
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="yang">yang</h3>
+        <ul>
+        <li>
+            Description: The YANG data modeling language for NETCONF.
+        </li>
+        <li>
+            Reference: RFC 6020:  YANG - A Data Modeling Language for the
+                    	   Network Configuration Protocol (NETCONF)
+        </li>
+        <li>
+            base: schema-format
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="yin">yin</h3>
+        <ul>
+        <li>
+            Description: The YIN syntax for YANG.
+        </li>
+        <li>
+            Reference: RFC 6020:  YANG - A Data Modeling Language for the
+                    	   Network Configuration Protocol (NETCONF)
+        </li>
+        <li>
+            base: schema-format
+        </li>
+        </ul>
+    </li>
+    </ul>
+    
+    <h2>Groupings</h2>
+    <ul>
+    <li>
+        <h3 id="common-counters">common-counters</h3>
+        <ul>
+            <li>
+                Description: Counters that exist both per session, and also globally,
+                       accumulated from all sessions.
+            </li>
+            <ul>
+            <strong><li>
+                leaf: in-rpcs
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Number of correct <rpc> messages received.
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:ietf-yang-types)zero-based-counter32
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: in-bad-rpcs
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Number of messages received when an <rpc> message was expected,
+                         that were not correct <rpc> messages.  This includes XML parse
+                         errors and errors on the rpc layer.
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:ietf-yang-types)zero-based-counter32
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: out-rpc-errors
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Number of <rpc-reply> messages sent that contained an
+                         <rpc-error> element.
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:ietf-yang-types)zero-based-counter32
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: out-notifications
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Number of <notification> messages sent.
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:ietf-yang-types)zero-based-counter32
+            </li>
+            </ul>
+            </ul>
+        </ul>
+    </li>
+    </ul>
+    
+    <h2>Datastore Structure</h2>
+    <strong>ietf-netconf-monitoring</strong>
+    <ul>
+    <li>
+        <a href="#netconf-state"><strong>netconf-state</strong>
+        </a>
+        <ul>
+        <li>
+            <a href="#netconf-state/capabilities"><strong>capabilities</strong>
+            </a>
+            <ul>
+            <li>
+                capability
+            </li>
+            </ul>
+        </li>
+        <li>
+            <a href="#netconf-state/datastores"><strong>datastores</strong>
+            </a>
+            <ul>
+            <li>
+                <a href="#netconf-state/datastores/datastore"><strong>datastore</strong> [name]
+                </a>
+                <ul>
+                <li>
+                    name
+                </li>
+                <li>
+                    <a href="#netconf-state/datastores/datastore/locks"><strong>locks</strong>
+                    </a>
+                    <ul>
+                    <li>
+                        lock-type
+                         (choice)
+                        <ul>
+                        <li>
+                        global-lock
+                        <ul>
+                        <li>
+                            <a href="#netconf-state/datastores/datastore/locks/global-lock"><strong>global-lock</strong>
+                            </a>
+                            <ul>
+                            <li>
+                                <i>locked-by-session</i>(U)
+                            </li>
+                            <li>
+                                <i>locked-time</i>(U)
+                            </li>
+                            </ul>
+                        </li>
+                        </ul>
+                        </li>
+                        <li>
+                        partial-lock
+                        <ul>
+                        <li>
+                            <a href="#netconf-state/datastores/datastore/locks/partial-lock"><strong>partial-lock</strong> [lock-id]
+                            </a>
+                            <ul>
+                            <li>
+                                lock-id
+                            </li>
+                            <li>
+                                <i>locked-by-session</i>(U)
+                            </li>
+                            <li>
+                                <i>locked-time</i>(U)
+                            </li>
+                            <li>
+                                select
+                            </li>
+                            <li>
+                                locked-node
+                            </li>
+                            </ul>
+                        </li>
+                        </ul>
+                        </li>
+                        </ul>
+                    </li>
+                    </ul>
+                </li>
+                </ul>
+            </li>
+            </ul>
+        </li>
+        <li>
+            <a href="#netconf-state/schemas"><strong>schemas</strong>
+            </a>
+            <ul>
+            <li>
+                <a href="#netconf-state/schemas/schema"><strong>schema</strong> [identifier version format]
+                </a>
+                <ul>
+                <li>
+                    identifier
+                </li>
+                <li>
+                    version
+                </li>
+                <li>
+                    format
+                </li>
+                <li>
+                    namespace
+                </li>
+                <li>
+                    location
+                </li>
+                </ul>
+            </li>
+            </ul>
+        </li>
+        <li>
+            <a href="#netconf-state/sessions"><strong>sessions</strong>
+            </a>
+            <ul>
+            <li>
+                <a href="#netconf-state/sessions/session"><strong>session</strong> [session-id]
+                </a>
+                <ul>
+                <li>
+                    session-id
+                </li>
+                <li>
+                    transport
+                </li>
+                <li>
+                    username
+                </li>
+                <li>
+                    source-host
+                </li>
+                <li>
+                    login-time
+                </li>
+                <li>
+                    <i>in-rpcs</i>(U)
+                </li>
+                <li>
+                    <i>in-bad-rpcs</i>(U)
+                </li>
+                <li>
+                    <i>out-rpc-errors</i>(U)
+                </li>
+                <li>
+                    <i>out-notifications</i>(U)
+                </li>
+                </ul>
+            </li>
+            </ul>
+        </li>
+        <li>
+            <a href="#netconf-state/statistics"><strong>statistics</strong>
+            </a>
+            <ul>
+            <li>
+                netconf-start-time
+            </li>
+            <li>
+                in-bad-hellos
+            </li>
+            <li>
+                in-sessions
+            </li>
+            <li>
+                dropped-sessions
+            </li>
+            <li>
+                <i>in-rpcs</i>(U)
+            </li>
+            <li>
+                <i>in-bad-rpcs</i>(U)
+            </li>
+            <li>
+                <i>out-rpc-errors</i>(U)
+            </li>
+            <li>
+                <i>out-notifications</i>(U)
+            </li>
+            </ul>
+        </li>
+        </ul>
+    </li>
+    </ul>
+    
+    <h2>Child nodes</h2>
+    
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong><a href="#netconf-state">netconf-state</a>
+    </strong> (container)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3 id="netconf-state">
+        netconf-state
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong><a href="#netconf-state/capabilities">capabilities</a>
+    </strong> (container)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong><a href="#netconf-state/datastores">datastores</a>
+    </strong> (container)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong><a href="#netconf-state/schemas">schemas</a>
+    </strong> (container)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong><a href="#netconf-state/sessions">sessions</a>
+    </strong> (container)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong><a href="#netconf-state/statistics">statistics</a>
+    </strong> (container)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;netconf-state xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- capabilities -->
+            &lt!-- See <a href="#netconf-state/capabilities">definition</a>
+             for child nodes.  --&gt
+            &lt;capabilities xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/capabilities&gt;
+        <!-- datastores -->
+            &lt!-- See <a href="#netconf-state/datastores">definition</a>
+             for child nodes.  --&gt
+            &lt;datastores xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/datastores&gt;
+        <!-- schemas -->
+            &lt!-- See <a href="#netconf-state/schemas">definition</a>
+             for child nodes.  --&gt
+            &lt;schemas xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/schemas&gt;
+        <!-- sessions -->
+            &lt!-- See <a href="#netconf-state/sessions">definition</a>
+             for child nodes.  --&gt
+            &lt;sessions xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/sessions&gt;
+        <!-- statistics -->
+            &lt!-- See <a href="#netconf-state/statistics">definition</a>
+             for child nodes.  --&gt
+            &lt;statistics xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/statistics&gt;
+        
+        &lt;/netconf-state&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/capabilities">
+        netconf-state/capabilities
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/capabilities</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong>capability</strong> (leaf-list)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;capabilities xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- capability -->
+            &lt!-- This node could appear multiple times --&gt
+            &lt;capability xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/capability&gt;
+        
+        &lt;/capabilities&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/datastores">
+        netconf-state/datastores
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/datastores</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong><a href="#netconf-state/datastores/datastore">datastore</a>
+    </strong> (list)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;datastores xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- datastore -->
+            &lt!-- See <a href="#netconf-state/datastores/datastore">definition</a>
+             for child nodes.  --&gt
+            &lt!-- This node could appear multiple times --&gt
+            &lt;datastore xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/datastore&gt;
+        
+        &lt;/datastores&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/datastores/datastore">
+        netconf-state/datastores/datastore
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/datastores/datastore/{name}</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong>name</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong><a href="#netconf-state/datastores/datastore/locks">locks</a>
+    </strong> (container)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;datastore xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- name -->
+            &lt;name xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/name&gt;
+        <!-- locks -->
+            &lt!-- See <a href="#netconf-state/datastores/datastore/locks">definition</a>
+             for child nodes.  --&gt
+            &lt;locks xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/locks&gt;
+        
+        &lt;/datastore&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/datastores/datastore/locks">
+        netconf-state/datastores/datastore/locks
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/datastores/datastore/{name}/locks</code></dd>
+    </dl>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;locks xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- lock-type -->
+            <!-- noop -->
+        
+        &lt;/locks&gt;
+    </pre>
+    </h3>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;locks xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- global-lock -->
+            <!-- noop -->
+        <!-- partial-lock -->
+            <!-- noop -->
+        
+        &lt;/locks&gt;
+    </pre>
+    </h3>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong><a href="#netconf-state/datastores/datastore/locks/global-lock">global-lock</a>
+    </strong> (container)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;locks xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- global-lock -->
+            &lt!-- See <a href="#netconf-state/datastores/datastore/locks/global-lock">definition</a>
+             for child nodes.  --&gt
+            &lt;global-lock xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/global-lock&gt;
+        
+        &lt;/locks&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/datastores/datastore/locks/global-lock">
+        netconf-state/datastores/datastore/locks/global-lock
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/datastores/datastore/{name}/locks/global-lock</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong>locked-by-session</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>true</strong></li>
+    </ul>
+    </li>
+    <li><strong>locked-time</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>true</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;global-lock xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- locked-by-session -->
+            &lt;locked-by-session xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/locked-by-session&gt;
+        <!-- locked-time -->
+            &lt;locked-time xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/locked-time&gt;
+        
+        &lt;/global-lock&gt;
+    </pre>
+    </h3>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong><a href="#netconf-state/datastores/datastore/locks/partial-lock">partial-lock</a>
+    </strong> (list)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;locks xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- partial-lock -->
+            &lt!-- See <a href="#netconf-state/datastores/datastore/locks/partial-lock">definition</a>
+             for child nodes.  --&gt
+            &lt!-- This node could appear multiple times --&gt
+            &lt;partial-lock xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/partial-lock&gt;
+        
+        &lt;/locks&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/datastores/datastore/locks/partial-lock">
+        netconf-state/datastores/datastore/locks/partial-lock
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/datastores/datastore/{name}/locks/partial-lock/{lock-id}</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong>lock-id</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>locked-by-session</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>true</strong></li>
+    </ul>
+    </li>
+    <li><strong>locked-time</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>true</strong></li>
+    </ul>
+    </li>
+    <li><strong>select</strong> (leaf-list)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>locked-node</strong> (leaf-list)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;partial-lock xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- lock-id -->
+            &lt;lock-id xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/lock-id&gt;
+        <!-- locked-by-session -->
+            &lt;locked-by-session xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/locked-by-session&gt;
+        <!-- locked-time -->
+            &lt;locked-time xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/locked-time&gt;
+        <!-- select -->
+            &lt!-- This node could appear multiple times --&gt
+            &lt;select xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/select&gt;
+        <!-- locked-node -->
+            &lt!-- This node could appear multiple times --&gt
+            &lt;locked-node xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/locked-node&gt;
+        
+        &lt;/partial-lock&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/schemas">
+        netconf-state/schemas
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/schemas</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong><a href="#netconf-state/schemas/schema">schema</a>
+    </strong> (list)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;schemas xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- schema -->
+            &lt!-- See <a href="#netconf-state/schemas/schema">definition</a>
+             for child nodes.  --&gt
+            &lt!-- This node could appear multiple times --&gt
+            &lt;schema xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/schema&gt;
+        
+        &lt;/schemas&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/schemas/schema">
+        netconf-state/schemas/schema
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/schemas/schema/{identifier}/{version}/{format}</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong>identifier</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>version</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>format</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>namespace</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>true</strong></li>
+    </ul>
+    </li>
+    <li><strong>location</strong> (leaf-list)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;schema xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- identifier -->
+            &lt;identifier xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/identifier&gt;
+        <!-- version -->
+            &lt;version xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/version&gt;
+        <!-- format -->
+            &lt;format xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/format&gt;
+        <!-- namespace -->
+            &lt;namespace xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/namespace&gt;
+        <!-- location -->
+            &lt!-- This node could appear multiple times --&gt
+            &lt;location xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/location&gt;
+        
+        &lt;/schema&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/sessions">
+        netconf-state/sessions
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/sessions</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong><a href="#netconf-state/sessions/session">session</a>
+    </strong> (list)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;sessions xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- session -->
+            &lt!-- See <a href="#netconf-state/sessions/session">definition</a>
+             for child nodes.  --&gt
+            &lt!-- This node could appear multiple times --&gt
+            &lt;session xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/session&gt;
+        
+        &lt;/sessions&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/sessions/session">
+        netconf-state/sessions/session
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/sessions/session/{session-id}</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong>session-id</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>transport</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>true</strong></li>
+    </ul>
+    </li>
+    <li><strong>username</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>true</strong></li>
+    </ul>
+    </li>
+    <li><strong>source-host</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>login-time</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>true</strong></li>
+    </ul>
+    </li>
+    <li><strong>in-rpcs</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>in-bad-rpcs</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>out-rpc-errors</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>out-notifications</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;session xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- session-id -->
+            &lt;session-id xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/session-id&gt;
+        <!-- transport -->
+            &lt;transport xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/transport&gt;
+        <!-- username -->
+            &lt;username xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/username&gt;
+        <!-- source-host -->
+            &lt;source-host xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/source-host&gt;
+        <!-- login-time -->
+            &lt;login-time xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/login-time&gt;
+        <!-- in-rpcs -->
+            &lt;in-rpcs xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/in-rpcs&gt;
+        <!-- in-bad-rpcs -->
+            &lt;in-bad-rpcs xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/in-bad-rpcs&gt;
+        <!-- out-rpc-errors -->
+            &lt;out-rpc-errors xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/out-rpc-errors&gt;
+        <!-- out-notifications -->
+            &lt;out-notifications xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/out-notifications&gt;
+        
+        &lt;/session&gt;
+    </pre>
+    </h3>
+    <h3 id="netconf-state/statistics">
+        netconf-state/statistics
+    </h3>
+    <dl>
+      <dt>XML Path</dt>
+      <dd></dd>
+      <dt>Restconf path</dt>
+      <dd><code>ietf-netconf-monitoring:netconf-state/statistics</code></dd>
+    </dl>
+    <h3>Direct children</h3>
+    <ul>
+    <li><strong>netconf-start-time</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>in-bad-hellos</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>in-sessions</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>dropped-sessions</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>false</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>in-rpcs</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>in-bad-rpcs</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>out-rpc-errors</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    <li><strong>out-notifications</strong> (leaf)
+    <ul>
+        <li>configuration data: <strong>true</strong></li>
+        <li>mandatory: <strong>false</strong></li>
+    </ul>
+    </li>
+    </ul>
+    
+    <h3>XML example</h3>
+    <pre>
+        &lt;statistics xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;<!-- Child nodes -->
+        <!-- netconf-start-time -->
+            &lt;netconf-start-time xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/netconf-start-time&gt;
+        <!-- in-bad-hellos -->
+            &lt;in-bad-hellos xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/in-bad-hellos&gt;
+        <!-- in-sessions -->
+            &lt;in-sessions xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/in-sessions&gt;
+        <!-- dropped-sessions -->
+            &lt;dropped-sessions xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/dropped-sessions&gt;
+        <!-- in-rpcs -->
+            &lt;in-rpcs xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/in-rpcs&gt;
+        <!-- in-bad-rpcs -->
+            &lt;in-bad-rpcs xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/in-bad-rpcs&gt;
+        <!-- out-rpc-errors -->
+            &lt;out-rpc-errors xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/out-rpc-errors&gt;
+        <!-- out-notifications -->
+            &lt;out-notifications xmlns="urn:ietf:params:xml:ns:yang:ietf-netconf-monitoring"&gt;...&lt;/out-notifications&gt;
+        
+        &lt;/statistics&gt;
+    </pre>
+    </h3>
+    
+    
+    
+    <h2>RPC Definitions</h2>
+    <h3 id="get-schema">get-schema
+    </h3>
+        <ul>
+            <li>
+                Description: This operation is used to retrieve a schema from the
+                       NETCONF server.
+                
+                       Positive Response:
+                         The NETCONF server returns the requested schema.
+                
+                       Negative Response:
+                         If requested schema does not exist, the <error-tag> is
+                         'invalid-value'.
+                
+                         If more than one schema matches the requested parameters, the
+                         <error-tag> is 'operation-failed', and <error-app-tag> is
+                         'data-not-unique'.
+            </li>
+            <ul>
+            <strong>
+            <li id="get-schema/input">
+                container: input
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: identifier
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Identifier for the schema list entry.
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)string
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: version
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Version of the schema requested.  If this parameter is not
+                           present, and more than one version of the schema exists on
+                           the server, a 'data-not-unique' error is returned, as
+                           described above.
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)string
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: format
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: The data modeling language of the schema.  If this
+                            parameter is not present, and more than one formats of
+                            the schema exists on the server, a 'data-not-unique' error
+                            is returned, as described above.
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)identityref
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            <ul>
+            <strong>
+            <li id="get-schema/output">
+                container: output
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                anyxml: data
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Contains the schema content.
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+        </ul>
+    </ul>
+    
+    
+    
+  </body>
+</html>

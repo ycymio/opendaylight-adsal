@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>config-logging</title>
+  </head>
+  <body>
+    <h1>config-logging</h1>
+    
+    <h2>Base Information</h2>
+    <table>
+        <tr>
+            <td><strong>prefix</strong></td>
+            <td>logging</td>
+        </tr>
+        <tr>
+            <td><strong>namespace</strong></td>
+            <td>urn:opendaylight:params:xml:ns:yang:controller:logback:config</td>
+        </tr>
+        <tr>
+            <td><strong>revision</strong></td>
+            <td>2013-07-16</td>
+        </tr>
+        <tr>
+            <td><strong>description</strong></td>
+            <td>This module contains the base YANG definitions for NS-OS
+                     logging module.</td>
+        </tr>
+        <tr>
+            <td><strong>yang-version</strong></td>
+            <td>1</td>
+        </tr>
+        <tr>
+    <td><strong>imports</strong></td><td>        config:config 2013-04-05;
+            rpcx:rpc-context 2013-06-17;
+    </td>    </tr>
+    </table>
+    
+    <h3>Identities Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#logback"><strong>logback</strong></a>
+            </td>
+            <td>
+            Actual state of logback configuration.
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#logback-rpc"><strong>logback-rpc</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+    <h3>Augmentations Summary</h3>
+    <table>
+        <tr>
+            <th>Target</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:configuration/(case)logback"><strong>/config:modules/config:module/config:configuration/(case)logback</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/config:modules/config:module/config:state/(case)logback"><strong>/config:modules/config:module/config:state/(case)logback</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+    <h3>RPCs Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#reset"><strong>reset</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+    
+    
+    <h2>Identities</h2>
+    <ul>
+    <li>
+        <h3 id="logback">logback</h3>
+        <ul>
+        <li>
+            Description: Actual state of logback configuration.
+        </li>
+        <li>
+            base: module-type
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="logback-rpc">logback-rpc</h3>
+        <ul>
+        </ul>
+    </li>
+    </ul>
+    
+    
+    
+    
+    
+    <h2>Augmentations</h2>
+    
+    <ul>
+    <li>
+        <h3 id="/config:modules/config:module/config:configuration/(case)logback">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:configuration/(case)logback]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/logback">
+            case: logback
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'logback'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/logback/file-appenders">
+            list: file-appenders
+        </li>
+        </strong>
+        <ul>
+        <li>
+            key definition: name
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: append
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)boolean
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: file-name
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: encoder-pattern
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: name
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/logback/rolling-appenders">
+            list: rolling-appenders
+        </li>
+        </strong>
+        <ul>
+        <li>
+            key definition: name
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: append
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)boolean
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: file-name
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: encoder-pattern
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: min-index
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)int32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: max-index
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)int32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: max-file-size
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: name
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: file-name-pattern
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: rolling-policy-type
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: max-history
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)int32
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: clean-history-on-start
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)boolean
+        </li>
+        <li>
+            default: false
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/logback/console-appenders">
+            list: console-appenders
+        </li>
+        </strong>
+        <ul>
+        <li>
+            key definition: name
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: encoder-pattern
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: threshold-filter
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        <li>
+            default: ALL
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: name
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        <ul>
+        <strong>
+        <li id="modules/module/configuration/logback/loggers">
+            list: loggers
+        </li>
+        </strong>
+        <ul>
+        <li>
+            key definition: logger-name
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: logger-name
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: level
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf-list: appenders
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: string
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    <li>
+        <h3 id="/config:modules/config:module/config:state/(case)logback">
+        Target [(urn:opendaylight:params:xml:ns:yang:controller:config)/config:modules/config:module/config:state/(case)logback]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="modules/module/state/logback">
+            case: logback
+        </li>
+        </strong>
+        <ul>
+        <li>
+            when condition: /config:modules/config:module/config:type = 'logback'
+        </li>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong>
+        <li id="modules/module/state/logback/status">
+            list: status
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: level
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: message
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)string
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: date
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:ietf:params:xml:ns:yang:1)uint32
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        </pre>
+    </li>
+    </ul>
+    
+    <h2>RPC Definitions</h2>
+    <h3 id="reset">reset
+    </h3>
+        <ul>
+            <ul>
+            <strong>
+            <li id="reset/input">
+                container: input
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            <strong><li>
+                uses: (urn:ietf:params:xml:ns:yang:rpc-context)rpc-context-ref
+            </li>
+            </strong>
+            <ul>
+            <li>refines:
+                <ul>
+                <li>
+                    node name: context-instance
+                </li>
+                </ul>
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: context-instance
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Pointer to the context. 
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)instance-identifier
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+            <ul>
+            </ul>
+        </ul>
+    </ul>
+    
+    
+    
+  </body>
+</html>

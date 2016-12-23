@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>rpc-context</title>
+  </head>
+  <body>
+    <h1>rpc-context</h1>
+    
+    <h2>Base Information</h2>
+    <table>
+        <tr>
+            <td><strong>prefix</strong></td>
+            <td>rpcx</td>
+        </tr>
+        <tr>
+            <td><strong>namespace</strong></td>
+            <td>urn:ietf:params:xml:ns:yang:rpc-context</td>
+        </tr>
+        <tr>
+            <td><strong>revision</strong></td>
+            <td>2013-06-17</td>
+        </tr>
+        <tr>
+            <td><strong>description</strong></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><strong>yang-version</strong></td>
+            <td>1</td>
+        </tr>
+        <tr>
+        </tr>
+    </table>
+    
+    <h3>Groupings Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#rpc-context-ref"><strong>rpc-context-ref</strong></a>
+            </td>
+            <td>
+            A reference to RPC context.
+            </td>
+        </tr>
+    </table>
+    <h3>Extensions Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#rpc-context-instance"><strong>rpc-context-instance</strong></a>
+            </td>
+            <td>
+            Marks enclosing (parent) schema node as suitable RPC context.
+                         The argument is identity which is used to identify RPC context
+                         type.
+            </td>
+        </tr>
+    </table>
+    
+    
+    
+    <h2>Groupings</h2>
+    <ul>
+    <li>
+        <h3 id="rpc-context-ref">rpc-context-ref</h3>
+        <ul>
+            <li>
+                Description: A reference to RPC context.
+            </li>
+            <ul>
+            <strong><li>
+                leaf: context-instance
+            </li>
+            </strong>
+            <ul>
+            <li>
+                description: Pointer to the context. 
+            </li>
+            <li>
+                type: (urn:ietf:params:xml:ns:yang:1)instance-identifier
+            </li>
+            </ul>
+            </ul>
+        </ul>
+    </li>
+    </ul>
+    
+    
+    
+    
+    
+    
+    <h2>Extensions</h2>
+    <li>
+        <h3 id="rpc-context-instance">rpc-context-instance
+        </h3>
+    </li>
+    <ul>
+        <li>
+            Description: Marks enclosing (parent) schema node as suitable RPC context.
+                         The argument is identity which is used to identify RPC context
+                         type.
+        </li>
+        <li>
+            Argument: context-type
+        </li>
+    </ul>
+    
+    
+  </body>
+</html>

@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<application xmlns="http://wadl.dev.java.net/2009/02" xmlns:inet="urn:ietf:params:xml:ns:yang:ietf-inet-types"
+xmlns:ext="urn:opendaylight:yang:extension:yang-ext"
+ xmlns:inv="urn:opendaylight:inventory">
+
+	<grammars>
+		<include href="opendaylight-inventory.yang"/>
+		<include href="ietf-inet-types.yang"/>
+		<include href="yang-ext.yang"/>
+	</grammars>
+	
+	<resources base="http://localhost:9998/restconf">
+		<resource path="config">
+			<method name="POST">
+				<request>
+					<representation mediaType="application/xml" element="nodes"/>
+					<representation mediaType="text/xml" element="nodes"/>
+					<representation mediaType="application/json" element="nodes"/>
+					<representation mediaType="application/yang.data+xml" element="nodes"/>
+					<representation mediaType="application/yang.data+json" element="nodes"/>
+				</request>
+			</method>
+			<resource path="opendaylight-inventory:nodes">
+				<method name="GET">
+					<response>
+						<representation mediaType="application/xml" element="nodes"/>
+						<representation mediaType="text/xml" element="nodes"/>
+						<representation mediaType="application/json" element="nodes"/>
+						<representation mediaType="application/yang.data+xml" element="nodes"/>
+						<representation mediaType="application/yang.data+json" element="nodes"/>
+					</response>
+				</method>
+				<method name="DELETE" />
+				<method name="PUT">
+					<request>
+						<representation mediaType="application/xml" element="nodes"/>
+						<representation mediaType="text/xml" element="nodes"/>
+						<representation mediaType="application/json" element="nodes"/>
+						<representation mediaType="application/yang.data+xml" element="nodes"/>
+						<representation mediaType="application/yang.data+json" element="nodes"/>
+					</request>
+				</method>
+				<method name="POST">
+					<request>
+						<representation mediaType="application/xml" element="node"/>
+						<representation mediaType="text/xml" element="node"/>
+						<representation mediaType="application/json" element="node"/>
+						<representation mediaType="application/yang.data+xml" element="node"/>
+						<representation mediaType="application/yang.data+json" element="node"/>
+					</request>
+				</method>
+				<resource path="node/{id}">
+					<param required="true" style="template" name="id" type="node-id"/>
+					<method name="GET">
+						<response>
+							<representation mediaType="application/xml" element="node"/>
+							<representation mediaType="text/xml" element="node"/>
+							<representation mediaType="application/json" element="node"/>
+							<representation mediaType="application/yang.data+xml" element="node"/>
+							<representation mediaType="application/yang.data+json" element="node"/>
+						</response>
+					</method>
+					<method name="DELETE" />
+					<method name="PUT">
+						<request>
+							<representation mediaType="application/xml" element="node"/>
+							<representation mediaType="text/xml" element="node"/>
+							<representation mediaType="application/json" element="node"/>
+							<representation mediaType="application/yang.data+xml" element="node"/>
+							<representation mediaType="application/yang.data+json" element="node"/>
+						</request>
+					</method>
+					<method name="POST">
+						<request>
+							<representation mediaType="application/xml" element="node-connector"/>
+							<representation mediaType="text/xml" element="node-connector"/>
+							<representation mediaType="application/json" element="node-connector"/>
+							<representation mediaType="application/yang.data+xml" element="node-connector"/>
+							<representation mediaType="application/yang.data+json" element="node-connector"/>
+						</request>
+					</method>
+					<method name="POST">
+						<request>
+							<representation mediaType="application/xml" element="netinv:pass-through"/>
+							<representation mediaType="text/xml" element="netinv:pass-through"/>
+							<representation mediaType="application/json" element="netinv:pass-through"/>
+							<representation mediaType="application/yang.data+xml" element="netinv:pass-through"/>
+							<representation mediaType="application/yang.data+json" element="netinv:pass-through"/>
+						</request>
+					</method>
+					<resource path="node-connector/{id}">
+						<param required="true" style="template" name="id" type="node-connector-id"/>
+						<method name="GET">
+							<response>
+								<representation mediaType="application/xml" element="node-connector"/>
+								<representation mediaType="text/xml" element="node-connector"/>
+								<representation mediaType="application/json" element="node-connector"/>
+								<representation mediaType="application/yang.data+xml" element="node-connector"/>
+								<representation mediaType="application/yang.data+json" element="node-connector"/>
+							</response>
+						</method>
+						<method name="DELETE" />
+						<method name="PUT">
+							<request>
+								<representation mediaType="application/xml" element="node-connector"/>
+								<representation mediaType="text/xml" element="node-connector"/>
+								<representation mediaType="application/json" element="node-connector"/>
+								<representation mediaType="application/yang.data+xml" element="node-connector"/>
+								<representation mediaType="application/yang.data+json" element="node-connector"/>
+							</request>
+						</method>
+					</resource>
+					<resource path="pass-through">
+						<method name="GET">
+							<response>
+								<representation mediaType="application/xml" element="netinv:pass-through"/>
+								<representation mediaType="text/xml" element="netinv:pass-through"/>
+								<representation mediaType="application/json" element="netinv:pass-through"/>
+								<representation mediaType="application/yang.data+xml" element="netinv:pass-through"/>
+								<representation mediaType="application/yang.data+json" element="netinv:pass-through"/>
+							</response>
+						</method>
+						<method name="DELETE" />
+						<method name="PUT">
+							<request>
+								<representation mediaType="application/xml" element="netinv:pass-through"/>
+								<representation mediaType="text/xml" element="netinv:pass-through"/>
+								<representation mediaType="application/json" element="netinv:pass-through"/>
+								<representation mediaType="application/yang.data+xml" element="netinv:pass-through"/>
+								<representation mediaType="application/yang.data+json" element="netinv:pass-through"/>
+							</request>
+						</method>
+					</resource>
+				</resource>
+			</resource>
+		</resource>
+	</resources>
+</application>

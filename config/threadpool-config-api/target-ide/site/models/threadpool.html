@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>threadpool</title>
+  </head>
+  <body>
+    <h1>threadpool</h1>
+    
+    <h2>Base Information</h2>
+    <table>
+        <tr>
+            <td><strong>prefix</strong></td>
+            <td>th</td>
+        </tr>
+        <tr>
+            <td><strong>namespace</strong></td>
+            <td>urn:opendaylight:params:xml:ns:yang:controller:threadpool</td>
+        </tr>
+        <tr>
+            <td><strong>revision</strong></td>
+            <td>2013-04-09</td>
+        </tr>
+        <tr>
+            <td><strong>description</strong></td>
+            <td>This module contains the base YANG definitions for
+                     thread-related services.
+            
+                    Copyright (c)2013 Cisco Systems, Inc. All rights reserved.;
+            
+                    This program and the accompanying materials are made available
+                    under the terms of the Eclipse Public License v1.0 which
+                    accompanies this distribution, and is available at
+                    http://www.eclipse.org/legal/epl-v10.html</td>
+        </tr>
+        <tr>
+            <td><strong>yang-version</strong></td>
+            <td>1</td>
+        </tr>
+        <tr>
+    <td><strong>imports</strong></td><td>        config:config 2013-04-05;
+    </td>    </tr>
+    </table>
+    
+    <h3>Identities Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#eventbus"><strong>eventbus</strong></a>
+            </td>
+            <td>
+            Service representing an event bus. The service acts as message
+                         router between event producers and event consumers
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#scheduled-threadpool"><strong>scheduled-threadpool</strong></a>
+            </td>
+            <td>
+            An extension of the simple pool of threads able to schedule
+                         work to be executed at some point in time.
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#threadfactory"><strong>threadfactory</strong></a>
+            </td>
+            <td>
+            Service representing a ThreadFactory instance. It is directly
+                         useful in Java world, where various library pieces need to create
+                         threads and you may want to inject a customized thread
+                         implementation.
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#threadpool"><strong>threadpool</strong></a>
+            </td>
+            <td>
+            A simple pool of threads able to execute work.
+            </td>
+        </tr>
+    </table>
+    
+    
+    <h2>Identities</h2>
+    <ul>
+    <li>
+        <h3 id="eventbus">eventbus</h3>
+        <ul>
+        <li>
+            Description: Service representing an event bus. The service acts as message
+                         router between event producers and event consumers
+        </li>
+        <li>
+            base: service-type
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="scheduled-threadpool">scheduled-threadpool</h3>
+        <ul>
+        <li>
+            Description: An extension of the simple pool of threads able to schedule
+                         work to be executed at some point in time.
+        </li>
+        <li>
+            base: threadpool
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="threadfactory">threadfactory</h3>
+        <ul>
+        <li>
+            Description: Service representing a ThreadFactory instance. It is directly
+                         useful in Java world, where various library pieces need to create
+                         threads and you may want to inject a customized thread
+                         implementation.
+        </li>
+        <li>
+            base: service-type
+        </li>
+        </ul>
+    </li>
+    <li>
+        <h3 id="threadpool">threadpool</h3>
+        <ul>
+        <li>
+            Description: A simple pool of threads able to execute work.
+        </li>
+        <li>
+            base: service-type
+        </li>
+        </ul>
+    </li>
+    </ul>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  </body>
+</html>

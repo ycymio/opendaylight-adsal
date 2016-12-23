@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>opendaylight-topology-view</title>
+  </head>
+  <body>
+    <h1>opendaylight-topology-view</h1>
+    
+    <h2>Base Information</h2>
+    <table>
+        <tr>
+            <td><strong>prefix</strong></td>
+            <td>nt</td>
+        </tr>
+        <tr>
+            <td><strong>namespace</strong></td>
+            <td>urn:opendaylight:model:topology:view</td>
+        </tr>
+        <tr>
+            <td><strong>revision</strong></td>
+            <td>2013-10-30</td>
+        </tr>
+        <tr>
+            <td><strong>description</strong></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><strong>yang-version</strong></td>
+            <td>1</td>
+        </tr>
+        <tr>
+    <td><strong>imports</strong></td><td>        topo:network-topology 2013-10-21;
+            ext:yang-ext;
+    </td>    </tr>
+    </table>
+    
+    <h3>Groupings Summary</h3>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#aggregate-node"><strong>aggregate-node</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#aggregate-topology"><strong>aggregate-topology</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+    <h3>Augmentations Summary</h3>
+    <table>
+        <tr>
+            <th>Target</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/network-topology:network-topology/network-topology:topology/"><strong>/network-topology:network-topology/network-topology:topology/</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <a href="#/network-topology:network-topology/network-topology:topology/network-topology:node/"><strong>/network-topology:network-topology/network-topology:topology/network-topology:node/</strong></a>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+    
+    
+    
+    <h2>Groupings</h2>
+    <ul>
+    <li>
+        <h3 id="aggregate-node">aggregate-node</h3>
+        <ul>
+            <ul>
+            <strong>
+            <li id="aggregate-node/original-node">
+                list: original-node
+            </li>
+            </strong>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            </ul>
+            <ul>
+            <ul>
+            <strong><li>
+                leaf: topology
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:TBD:params:xml:ns:yang:network-topology)topology-ref
+            </li>
+            </ul>
+            </ul>
+            <ul>
+            <strong><li>
+                leaf: node
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: (urn:TBD:params:xml:ns:yang:network-topology)node-ref
+            </li>
+            </ul>
+            </ul>
+            </ul>
+            </ul>
+        </ul>
+    </li>
+    <li>
+        <h3 id="aggregate-topology">aggregate-topology</h3>
+        <ul>
+            <ul>
+            <strong><li>
+                leaf-list: original-topology
+            </li>
+            </strong>
+            <ul>
+            <li>
+                type: topology-ref
+            </li>
+            </ul>
+            </ul>
+        </ul>
+    </li>
+    </ul>
+    
+    
+    
+    
+    <h2>Augmentations</h2>
+    
+    <ul>
+    <li>
+        <h3 id="/network-topology:network-topology/network-topology:topology/">
+        Target [(urn:TBD:params:xml:ns:yang:network-topology)/network-topology:network-topology/network-topology:topology/]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong><li>
+            leaf-list: original-topology
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: topology-ref
+        </li>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        &lt;topology xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+            &lt;topology-id&gt;. . .&lt;/topology-id&gt;
+            &lt;server-provided&gt;. . .&lt;/server-provided&gt;
+            &lt;topology-types xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+            &lt;/topology-types&gt;
+            &lt;underlay-topology xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                &lt;topology-ref&gt;. . .&lt;/topology-ref&gt;
+            &lt;/underlay-topology&gt;
+            &lt;node xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                &lt;node-id&gt;. . .&lt;/node-id&gt;
+                &lt;supporting-node xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                    &lt;node-ref&gt;. . .&lt;/node-ref&gt;
+                &lt;/supporting-node&gt;
+                &lt;termination-point xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                    &lt;tp-id&gt;. . .&lt;/tp-id&gt;
+                    &lt;tp-ref&gt;. . .&lt;/tp-ref&gt;
+                    &lt;tp-ref&gt;. . .&lt;/tp-ref&gt;
+                    &lt;tp-ref&gt;. . .&lt;/tp-ref&gt;
+                    &lt;inventory-node-connector-ref&gt;. . .&lt;/inventory-node-connector-ref&gt;
+                &lt;/termination-point&gt;
+                &lt;node-identifier xmlns="urn:opendaylight:model:topology:general"&gt;
+                    &lt;type&gt;. . .&lt;/type&gt;
+                    &lt;identifier&gt;. . .&lt;/identifier&gt;
+                &lt;/node-identifier&gt;
+                &lt;inventory-node-ref&gt;. . .&lt;/inventory-node-ref&gt;
+                &lt;original-node&gt;
+                    &lt;topology&gt;. . .&lt;/topology&gt;
+                    &lt;node&gt;. . .&lt;/node&gt;
+                &lt;/original-node&gt;
+            &lt;/node&gt;
+            &lt;link xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                &lt;link-id&gt;. . .&lt;/link-id&gt;
+                &lt;source xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                    &lt;source-node&gt;. . .&lt;/source-node&gt;
+                    &lt;source-tp&gt;. . .&lt;/source-tp&gt;
+                &lt;/source&gt;
+                &lt;destination xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                    &lt;dest-node&gt;. . .&lt;/dest-node&gt;
+                    &lt;dest-tp&gt;. . .&lt;/dest-tp&gt;
+                &lt;/destination&gt;
+                &lt;supporting-link xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                    &lt;link-ref&gt;. . .&lt;/link-ref&gt;
+                &lt;/supporting-link&gt;
+            &lt;/link&gt;
+            &lt;original-topology&gt;. . .&lt;/original-topology&gt;
+            &lt;original-topology&gt;. . .&lt;/original-topology&gt;
+            &lt;original-topology&gt;. . .&lt;/original-topology&gt;
+        &lt;/topology&gt;
+        </pre>
+    </li>
+    <li>
+        <h3 id="/network-topology:network-topology/network-topology:topology/network-topology:node/">
+        Target [(urn:TBD:params:xml:ns:yang:network-topology)/network-topology:network-topology/network-topology:topology/network-topology:node/]</h3>
+            Status: <strong>CURRENT</strong>
+        <ul>
+        <strong>
+        <li id="network-topology/topology/node/original-node">
+            list: original-node
+        </li>
+        </strong>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        </ul>
+        <ul>
+        <ul>
+        <strong><li>
+            leaf: topology
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:TBD:params:xml:ns:yang:network-topology)topology-ref
+        </li>
+        </ul>
+        </ul>
+        <ul>
+        <strong><li>
+            leaf: node
+        </li>
+        </strong>
+        <ul>
+        <li>
+            type: (urn:TBD:params:xml:ns:yang:network-topology)node-ref
+        </li>
+        </ul>
+        </ul>
+        </ul>
+        </ul>
+        
+        <h3>Example</h3>
+        <pre>
+        &lt;node xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+            &lt;node-id&gt;. . .&lt;/node-id&gt;
+            &lt;supporting-node xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                &lt;node-ref&gt;. . .&lt;/node-ref&gt;
+            &lt;/supporting-node&gt;
+            &lt;termination-point xmlns="urn:TBD:params:xml:ns:yang:network-topology"&gt;
+                &lt;tp-id&gt;. . .&lt;/tp-id&gt;
+                &lt;tp-ref&gt;. . .&lt;/tp-ref&gt;
+                &lt;tp-ref&gt;. . .&lt;/tp-ref&gt;
+                &lt;tp-ref&gt;. . .&lt;/tp-ref&gt;
+                &lt;inventory-node-connector-ref&gt;. . .&lt;/inventory-node-connector-ref&gt;
+            &lt;/termination-point&gt;
+            &lt;node-identifier xmlns="urn:opendaylight:model:topology:general"&gt;
+                &lt;type&gt;. . .&lt;/type&gt;
+                &lt;identifier&gt;. . .&lt;/identifier&gt;
+            &lt;/node-identifier&gt;
+            &lt;inventory-node-ref&gt;. . .&lt;/inventory-node-ref&gt;
+            &lt;original-node&gt;
+                &lt;topology&gt;. . .&lt;/topology&gt;
+                &lt;node&gt;. . .&lt;/node&gt;
+            &lt;/original-node&gt;
+        &lt;/node&gt;
+        </pre>
+    </li>
+    </ul>
+    
+    
+    
+    
+  </body>
+</html>

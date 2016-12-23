@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<application xmlns="http://wadl.dev.java.net/2009/02" xmlns:yang="urn:ietf:params:xml:ns:yang:ietf-yang-types"
+xmlns:inet="urn:ietf:params:xml:ns:yang:ietf-inet-types"
+xmlns:match="urn:opendaylight:model:match:types"
+xmlns:l2t="urn:opendaylight:l2:types"
+ xmlns:action="urn:opendaylight:action:types">
+
+	<grammars>
+		<include href="opendaylight-action-types.yang"/>
+		<include href="ietf-yang-types.yang"/>
+		<include href="ietf-inet-types.yang"/>
+		<include href="opendaylight-match-types.yang"/>
+		<include href="opendaylight-l2-types.yang"/>
+	</grammars>
+	
+	<resources base="http://localhost:9998/restconf">
+		<resource path="config">
+			<method name="POST">
+				<request>
+					<representation mediaType="application/xml" element="action-types"/>
+					<representation mediaType="text/xml" element="action-types"/>
+					<representation mediaType="application/json" element="action-types"/>
+					<representation mediaType="application/yang.data+xml" element="action-types"/>
+					<representation mediaType="application/yang.data+json" element="action-types"/>
+				</request>
+			</method>
+			<resource path="opendaylight-action-types:action-types">
+				<method name="GET">
+					<response>
+						<representation mediaType="application/xml" element="action-types"/>
+						<representation mediaType="text/xml" element="action-types"/>
+						<representation mediaType="application/json" element="action-types"/>
+						<representation mediaType="application/yang.data+xml" element="action-types"/>
+						<representation mediaType="application/yang.data+json" element="action-types"/>
+					</response>
+				</method>
+				<method name="DELETE" />
+				<method name="PUT">
+					<request>
+						<representation mediaType="application/xml" element="action-types"/>
+						<representation mediaType="text/xml" element="action-types"/>
+						<representation mediaType="application/json" element="action-types"/>
+						<representation mediaType="application/yang.data+xml" element="action-types"/>
+						<representation mediaType="application/yang.data+json" element="action-types"/>
+					</request>
+				</method>
+				<method name="POST">
+					<request>
+						<representation mediaType="application/xml" element="action"/>
+						<representation mediaType="text/xml" element="action"/>
+						<representation mediaType="application/json" element="action"/>
+						<representation mediaType="application/yang.data+xml" element="action"/>
+						<representation mediaType="application/yang.data+json" element="action"/>
+					</request>
+				</method>
+				<resource path="action/{order}">
+					<param required="true" style="template" name="order" type="int32"/>
+					<method name="GET">
+						<response>
+							<representation mediaType="application/xml" element="action"/>
+							<representation mediaType="text/xml" element="action"/>
+							<representation mediaType="application/json" element="action"/>
+							<representation mediaType="application/yang.data+xml" element="action"/>
+							<representation mediaType="application/yang.data+json" element="action"/>
+						</response>
+					</method>
+					<method name="DELETE" />
+					<method name="PUT">
+						<request>
+							<representation mediaType="application/xml" element="action"/>
+							<representation mediaType="text/xml" element="action"/>
+							<representation mediaType="application/json" element="action"/>
+							<representation mediaType="application/yang.data+xml" element="action"/>
+							<representation mediaType="application/yang.data+json" element="action"/>
+						</request>
+					</method>
+				</resource>
+			</resource>
+		</resource>
+	</resources>
+</application>
