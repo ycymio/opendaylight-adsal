@@ -438,6 +438,7 @@ public class ConnectionManager implements IConnectionManager,
         help.append("---Connection Manager---\n");
         help.append("\t scheme [<name>]                      - Print / Set scheme\n");
         help.append("\t printNodes [<controller>]            - Print connected nodes\n");
+        help.append("\t removeNodeTest [<ipRemoved>] [<ipAdded>]           - Update the master of the specified node\n");
         return help.toString();
     }
 
@@ -447,5 +448,23 @@ public class ConnectionManager implements IConnectionManager,
         if (scheme == null)
             return Collections.emptySet();
         return scheme.getControllers(node);
+    }
+
+    public void _removeNodeTest(CommandInterpreter ci){
+        String ipRemoved = ci.nextArgument();
+        String ipAdded = ci.nextArgument();
+        try {
+            InetAddress controllerRemoved = InetAddress.getByName(ipRemoved);
+            InetAddress controllerAdded = InetAddress.getByName(ipAdded);
+            AbstractScheme scheme = schemes.get(activeScheme);
+            Set<Node> nodeSet = scheme.getNodes(controllerRemoved);
+            for( Node n : nodeSet){
+                scheme.updateNodeWithoutConstraint(n, controllerAdded);
+                break;
+            }
+        } catch (UnknownHostException e) {
+            logger.error("Resolving address {} or address {} failed", ipRemoved, ipAdded);
+            return;
+        }
     }
 }
