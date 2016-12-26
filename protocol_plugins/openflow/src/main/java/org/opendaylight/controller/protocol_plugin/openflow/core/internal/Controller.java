@@ -302,37 +302,10 @@ public class Controller implements IController, CommandProvider, IPluginInConnec
         addSwitchEvent(ev);
     }
 
-    /*******************************************************
-     *               modified by ycy                       *
-     *******************************************************/
-
-    private int vcount = 0;
-
     public void takeSwitchEventMsg(ISwitch sw, OFMessage msg) {
         if (messageListeners.get(msg.getType()) != null) {
             SwitchEvent ev = new SwitchEvent(SwitchEvent.SwitchEventType.SWITCH_MESSAGE, sw, msg,
                     SwitchEventPriority.LOW.ordinal());
-//            /*******************************************************
-//             *               modified by ycy                       *
-//             *******************************************************/
-//            Long ofSwitchID = Long.valueOf(sw.getId());
-//
-//            if (msg instanceof OFPacketIn) {
-//                // Maybe it could do with number of KeepProcessing.
-//                try {
-//                    OFPacketIn ofPacket = (OFPacketIn) msg;
-//                    Short ofPortID = Short.valueOf(ofPacket.getInPort());
-//                    Node n = new Node(Node.NodeIDType.OPENFLOW, ofSwitchID);
-//                    NodeConnector p = PortConverter.toNodeConnector(ofPortID, n);
-//                    RawPacket dataPacket = new RawPacket(ofPacket.getPacketData());
-//                    dataPacket.setIncomingNodeConnector(p);
-//                    SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-//                    System.out.println( df.format(new Date()) + " Controller: " + "-- all: " + (++vcount));
-//                } catch (ConstructionException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-
             addSwitchEvent(ev);
         }
     }
@@ -383,24 +356,6 @@ public class Controller implements IController, CommandProvider, IPluginInConnec
             ci.print("...start to accept connections from switches...\n");
             start();
         }
-    }
-
-
-    /*******************************************************
-     *               modified by ycy                       *
-     *******************************************************/
-    public void _shutdownController(CommandInterpreter ci){
-        ci.print("...Disconnecting the communication to all switches...\n");
-        stop();
-    }
-
-    public void _initpac(CommandInterpreter ci){
-        vcount = 0;
-        ci.print("Controller: The number of PACKET_IN is " + vcount + "\n");
-    }
-
-    public void _printpac(CommandInterpreter ci){
-        ci.print("Controller: The number of vcount is " + vcount + "\n");
     }
 
     public void _controllerShowConnConfig(CommandInterpreter ci) {

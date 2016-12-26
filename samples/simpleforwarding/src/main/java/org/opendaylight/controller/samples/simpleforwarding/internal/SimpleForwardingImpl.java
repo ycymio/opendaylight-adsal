@@ -753,12 +753,6 @@ public class SimpleForwardingImpl implements IfNewHostNotify,
                 po = e.getValue();
                 if (po != null) {
                     // Populate the Policy field now
-
-                    /*******************************************************
-                     *               modified by ycy                       *
-                     *******************************************************/
-                    po.getFlow().setHardTimeout((short)1);
-
                     Status poStatus = this.frm.modifyOrAddFlowEntry(po);
                     if (!poStatus.isSuccess()) {
                         log.error("Failed to install policy: "
@@ -946,9 +940,6 @@ public class SimpleForwardingImpl implements IfNewHostNotify,
         }
         Set<Node> switches = preparePerHostRules(host);
         if (switches != null) {
-            /*******************************************************
-             *               modified by ycy                       *
-             *******************************************************/
             installPerHostRules(host, switches);
 
             // Green light for sending pending packet to this host. Safe to call if there are none.

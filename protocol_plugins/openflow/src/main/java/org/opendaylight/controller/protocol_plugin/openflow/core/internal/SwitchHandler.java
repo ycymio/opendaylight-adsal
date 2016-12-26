@@ -13,7 +13,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,9 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IController;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IMessageReadWrite;
 import org.opendaylight.controller.protocol_plugin.openflow.core.ISwitch;
-import org.opendaylight.controller.sal.packet.Ethernet;
-import org.opendaylight.controller.sal.packet.IPv4;
-import org.opendaylight.controller.sal.utils.NetUtils;
 import org.openflow.protocol.OFBarrierReply;
 import org.openflow.protocol.OFBarrierRequest;
 import org.openflow.protocol.OFEchoReply;
@@ -49,8 +45,6 @@ import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFGetConfigReply;
 import org.openflow.protocol.OFMatch;
 import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFPacketIn;
-import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFPhysicalPort.OFPortConfig;
 import org.openflow.protocol.OFPhysicalPort.OFPortFeatures;
@@ -68,7 +62,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class SwitchHandler implements ISwitch{
+public class SwitchHandler implements ISwitch {
     private static final Logger logger = LoggerFactory.getLogger(SwitchHandler.class);
     private static final int SWITCH_LIVENESS_TIMER = 5000;
     private static final int switchLivenessTimeout = getSwitchLivenessTimeout();
@@ -419,20 +413,6 @@ public class SwitchHandler implements ISwitch{
                 processStatsReply((OFStatisticsReply) msg);
                 break;
             case PACKET_IN:
-                // TODO:
-                try{
-                    byte[] data = ((OFPacketIn)msg).getPacketData();
-                    Ethernet res = new Ethernet();
-                    res.deserialize(data, 0, data.length * NetUtils.NumBitsInAByte);
-                    if( res.getPayload() instanceof IPv4){
-                        inTime.add(System.currentTimeMillis());
-                    }
-                    /*******************************************************
-                     *              up modified by ycy                     *
-                     *******************************************************/
-                } catch (Exception e) {
-                    logger.warn("Failed to decode packet: {}", e.getMessage());
-                }
                 break;
             default:
                 break;
@@ -776,20 +756,6 @@ public class SwitchHandler implements ISwitch{
         return result;
     }
 
-    /*******************************************************
-     *               modified by ycy                       *
-     *******************************************************/
-//    private int inCount = 0;
-//    private int outCount = 0;
-
-    // TODO:
-    private static List<Long> inTime = Collections.synchronizedList(new ArrayList<Long>());
-    private static List<Long> outTime = Collections.synchronizedList(new ArrayList<Long>());
-
-    /*******************************************************
-     *               modified by ycy                       *
-     *******************************************************/
-
     /*
      * Transmit thread polls the message out of the priority queue and invokes
      * messaging service to transmit it over the socket channel
@@ -802,55 +768,6 @@ public class SwitchHandler implements ISwitch{
                 try {
                     PriorityMessage pmsg = transmitQ.take();
                     msgReadWriteService.asyncSend(pmsg.msg);
-
-                    OFMessage msg = pmsg.getMsg();
-                    if( msg instanceof OFPacketOut){
-                        try{
-                            byte[] data = ((OFPacketOut) msg).getPacketData();
-                            Ethernet res = new Ethernet();
-                            res.deserialize(data, 0, data.length * NetUtils.NumBitsInAByte);
-                            if(res.getPayload() instanceof IPv4){
-                                outTime.add(System.currentTimeMillis());
-                                System.out.println("SwitchHandler(" + sid + "): The number of PACKET_IN is " + inTime.size() + "\n");
-                                System.out.println("SwitchHandler(" + sid + "): The number of PACKET_OUT is " + outTime.size() + "\n");
-                                if( outTime.size() != inTime.size()){
-                                    logger.warn("The number of PACKET_IN IPv4 is not equal to that of PACKET_OUT IPv4");
-                                }
-                                else{
-                                    // do something millionseconds.
-                                    long diff = 0;
-                                    for( int i = 0; i < inTime.size(); ++i){
-                                        if( outTime.get(i) < inTime.get(i)){
-                                            logger.warn("The time of PACKET_IN IPv4 is later than that of PACKET_OUT IPv4");
-                                        }
-                                        else{
-                                            diff += outTime.get(i) - inTime.get(i);
-                                        }
-                                    }
-                                    System.out.println("SwitchHandler: Average processing time: " + (double)diff/inTime.size());
-                                    System.out.println("");
-                                }
-                                if( inTime.size() < 30 || inTime.size() % 100 == 0){
-                                    System.out.print("SwitchHandler: List of inTime is");
-                                    for( int i = 0; i < inTime.size() && i < 50; ++i){
-                                        System.out.print( (inTime.get(i)-inTime.get(0)) + " - - - ");
-                                    }
-                                    System.out.print("\n");
-                                    System.out.print("SwitchHandler: List of outTime is");
-                                    for( int i = 0; i < outTime.size() && i < 50; ++i){
-                                        System.out.print( (outTime.get(i)-inTime.get(0)) + " - - - ");
-                                    }
-                                    System.out.print("\n");
-                                }
-                                System.out.println("");
-                            }
-                        } catch (Exception e) {
-                            logger.warn("Failed to decode packet: {}", e.getMessage());
-                        }
-                        /*******************************************************
-                         *              up modified by ycy                     *
-                         *******************************************************/
-                    }
                     /*
                      * If syncReply is set to true, wait for the response back.
                      */
@@ -1029,5 +946,4 @@ public class SwitchHandler implements ISwitch{
                 .setLength((short) OFFlowMod.MINIMUM_LENGTH);
         asyncFastSend(flowMod);
     }
-
 }

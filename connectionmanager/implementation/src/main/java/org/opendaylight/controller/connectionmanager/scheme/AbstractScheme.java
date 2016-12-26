@@ -213,53 +213,6 @@ public abstract class AbstractScheme {
 
     }
 
-    /*******************************************************
-     *               modified by ycy                       *
-     *******************************************************/
-    public Status updateNodeWithoutConstraint (Node node, InetAddress controller) {
-        if (node == null || controller == null) {
-            return new Status(StatusCode.BADREQUEST, "Invalid Node or Controller Address Specified.");
-        }
-
-        if (clusterServices == null || nodeConnections == null) {
-            return new Status(StatusCode.SUCCESS);
-        }
-        log.debug("Trying to Put {} to {}", controller.getHostAddress(), node.toString());
-
-        Set<InetAddress> oldControllers = nodeConnections.get(node);
-        Set<InetAddress> newControllers = new HashSet<InetAddress>(oldControllers);
-        if (newControllers.add(controller)) { // true -> controller exists
-             try {
-                 clusterServices.tbegin();
-                 if (newControllers.size() > 0) {
-                     if (!nodeConnections.replace(node, oldControllers, newControllers)) {
-                         clusterServices.trollback();
-                         try {
-                             Thread.sleep(100);
-                         } catch ( InterruptedException e) {}
-                         return updateNodeWithoutConstraint(node, controller);
-                     }
-                 } else {
-                     nodeConnections.remove(node);
-                 }
-                 clusterServices.tcommit();
-             } catch (Exception e) {
-                log.error("Exception in removing Controller from a Node", e);
-                try {
-                   clusterServices.trollback();
-                } catch (Exception e1) {
-                    log.error("Error Rolling back the node Connections Changes ", e);
-                }
-                return new Status(StatusCode.INTERNALERROR);
-            }
-        }
-        log.debug("Succeed in removing node {} from the controller {}", node.toString(), controller.getHostAddress());
-        return new Status(StatusCode.SUCCESS);
-    }
-    /*******************************************************
-     *               modified by ycy                       *
-     *******************************************************/
-
     /*
      * A few race-conditions were seen with the Clustered caches in putIfAbsent and replace
      * functions. Leaving a few debug logs behind to assist in debugging if strange things happen.

@@ -335,7 +335,6 @@ public class DataPacketMuxDemux implements IContainerListener,
                 + data.length);
         po.setPacketData(data);
 
-//        sw.
         // send PACKET_OUT at high priority
         sw.asyncFastSend(po);
         logger.trace("Transmitted a frame of size: {}", data.length);

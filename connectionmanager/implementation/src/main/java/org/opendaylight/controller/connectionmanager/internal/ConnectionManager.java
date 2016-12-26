@@ -448,40 +448,4 @@ public class ConnectionManager implements IConnectionManager,
             return Collections.emptySet();
         return scheme.getControllers(node);
     }
-
-    public void _removeNode(CommandInterpreter ci){
-        String ipRemoved = ci.nextArgument();
-        String ipAdded = ci.nextArgument();
-        try {
-            InetAddress controllerRemoved = InetAddress.getByName(ipRemoved);
-            InetAddress controllerAdded = InetAddress.getByName(ipAdded);
-            AbstractScheme scheme = schemes.get(activeScheme);
-            Set<Node> nodeSet = scheme.getNodes(controllerRemoved);
-            for( Node n : nodeSet){
-                scheme.updateNodeWithoutConstraint(n, controllerAdded);
-                break;
-            }
-            // TODO:
-        } catch (UnknownHostException e) {
-            logger.error("Resolving address {} or address {} failed", ipRemoved, ipAdded);
-            return;
-        }
-    }
-
-//
-//    public void _scheme(CommandInterpreter ci) {
-//        String schemeStr = ci.nextArgument();
-//        if (schemeStr == null) {
-//            ci.println("Please enter valid Scheme name");
-//            ci.println("Current Scheme : " + activeScheme.name());
-//            return;
-//        }
-//        ConnectionMgmtScheme scheme = ConnectionMgmtScheme.valueOf(schemeStr);
-//        if (scheme == null) {
-//            ci.println("Please enter a valid Scheme name");
-//            return;
-//        }
-//        activeScheme = scheme;
-//    }
-
 }
