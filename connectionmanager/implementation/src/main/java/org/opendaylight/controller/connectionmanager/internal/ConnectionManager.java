@@ -439,6 +439,7 @@ public class ConnectionManager implements IConnectionManager,
         help.append("\t scheme [<name>]                      - Print / Set scheme\n");
         help.append("\t printNodes [<controller>]            - Print connected nodes\n");
         help.append("\t removeNodeTest [<ipRemoved>] [<ipAdded>]           - Update the master of the specified node\n");
+        help.append("\t getWorkingControllers                - get all the controllers dealt with packet_ins. \n");
         return help.toString();
     }
 
@@ -465,6 +466,17 @@ public class ConnectionManager implements IConnectionManager,
         } catch (UnknownHostException e) {
             logger.error("Resolving address {} or address {} failed", ipRemoved, ipAdded);
             return;
+        }
+    }
+
+    public void _getWorkingControllers(CommandInterpreter ci){
+        AbstractScheme scheme = schemes.get(activeScheme);
+        if (scheme == null) {
+            ci.println("The scheme of connectionmanager is null.");
+            return;
+        }
+        for (InetAddress address : scheme.getWorkingControllers()) {
+            ci.println("\t"+address.getHostAddress());
         }
     }
 }

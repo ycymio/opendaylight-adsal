@@ -14,6 +14,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -255,6 +256,21 @@ public abstract class AbstractScheme {
         }
         log.debug("Succeed in removing node {} from the controller {}", node.toString(), controller.getHostAddress());
         return new Status(StatusCode.SUCCESS);
+    }
+
+    public Set<InetAddress> getWorkingControllers(){
+        Iterator<Entry<Node, Set<InetAddress>>> iter = nodeConnections.entrySet().iterator();
+        Set<InetAddress> result = new HashSet<InetAddress>();
+        while( iter.hasNext() ){
+            Entry<Node, Set<InetAddress>> entry =  iter.next();
+            Set<InetAddress> val = entry.getValue();
+            for( InetAddress addr: val){
+                if ( !result.contains(addr) ){
+                    result.add(addr);
+                }
+            }
+        }
+        return result;
     }
     /*******************************************************
      *               modified by ycy                       *
