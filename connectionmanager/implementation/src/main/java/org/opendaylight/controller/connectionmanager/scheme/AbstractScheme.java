@@ -31,6 +31,9 @@ import org.opendaylight.controller.sal.utils.StatusCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+//import org.opendaylight.controller.assassin.internal.PacketHandler;
+//import balance.flow.PacketHandler;
+
 public abstract class AbstractScheme {
     private static final Logger log = LoggerFactory.getLogger(AbstractScheme.class);
     protected IClusterGlobalServices clusterServices = null;
@@ -46,6 +49,9 @@ public abstract class AbstractScheme {
     protected abstract boolean isConnectionAllowedInternal(Node node);
     private final String name;
     private final String nodeConnectionsCacheName;
+
+    protected ConcurrentMap <InetAddress, Integer> myControllerBurden;
+
 
     protected AbstractScheme(IClusterGlobalServices clusterServices, ConnectionMgmtScheme type) {
         this.clusterServices = clusterServices;
@@ -214,68 +220,6 @@ public abstract class AbstractScheme {
 
     }
 
-    /*******************************************************
-     *               modified by ycy                       *
-     *******************************************************/
-    public Status updateNodeWithoutConstraint (Node node, InetAddress controller) {
-        if (node == null || controller == null) {
-            return new Status(StatusCode.BADREQUEST, "Invalid Node or Controller Address Specified.");
-        }
-
-        if (clusterServices == null || nodeConnections == null) {
-            return new Status(StatusCode.SUCCESS);
-        }
-        log.debug("Trying to Put {} to {}", controller.getHostAddress(), node.toString());
-
-        Set<InetAddress> oldControllers = nodeConnections.get(node);
-        Set<InetAddress> newControllers = new HashSet<InetAddress>(oldControllers);
-        if (newControllers.add(controller)) { // true -> controller exists
-             try {
-                 clusterServices.tbegin();
-                 if (newControllers.size() > 0) {
-                     if (!nodeConnections.replace(node, oldControllers, newControllers)) {
-                         clusterServices.trollback();
-                         try {
-                             Thread.sleep(100);
-                         } catch ( InterruptedException e) {}
-                         return updateNodeWithoutConstraint(node, controller);
-                     }
-                 } else {
-                     nodeConnections.remove(node);
-                 }
-                 clusterServices.tcommit();
-             } catch (Exception e) {
-                log.error("Exception in removing Controller from a Node", e);
-                try {
-                   clusterServices.trollback();
-                } catch (Exception e1) {
-                    log.error("Error Rolling back the node Connections Changes ", e);
-                }
-                return new Status(StatusCode.INTERNALERROR);
-            }
-        }
-        log.debug("Succeed in removing node {} from the controller {}", node.toString(), controller.getHostAddress());
-        return new Status(StatusCode.SUCCESS);
-    }
-
-    public Set<InetAddress> getWorkingControllers(){
-        Iterator<Entry<Node, Set<InetAddress>>> iter = nodeConnections.entrySet().iterator();
-        Set<InetAddress> result = new HashSet<InetAddress>();
-        while( iter.hasNext() ){
-            Entry<Node, Set<InetAddress>> entry =  iter.next();
-            Set<InetAddress> val = entry.getValue();
-            for( InetAddress addr: val){
-                if ( !result.contains(addr) ){
-                    result.add(addr);
-                }
-            }
-        }
-        return result;
-    }
-    /*******************************************************
-     *               modified by ycy                       *
-     *******************************************************/
-
     /*
      * A few race-conditions were seen with the Clustered caches in putIfAbsent and replace
      * functions. Leaving a few debug logs behind to assist in debugging if strange things happen.
@@ -305,6 +249,13 @@ public abstract class AbstractScheme {
 
         try {
             clusterServices.tbegin();
+            //Integer tmp_integer = new Integer(666);
+            /*
+            if (myControllerBurden.putIfAbsent(clusterServices.getMyAddress(), PacketHandler.packet_in_number)!=null){
+                System.out.println("replacing controller burden!!!!!!");
+                myControllerBurden.replace(clusterServices.getMyAddress(), myControllerBurden.get(clusterServices.getMyAddress()), PacketHandler.packet_in_number);
+            }
+            */
             if (nodeConnections.putIfAbsent(node, newControllers) != null) {
                 log.debug("PutIfAbsent failed {} to {}", controller.getHostAddress(), node.toString());
                 /*
@@ -380,6 +331,10 @@ public abstract class AbstractScheme {
         if (nodeConnections == null) {
             log.error("\nFailed to get cache: {}", nodeConnectionsCacheName);
         }
+        myControllerBurden = (ConcurrentMap<InetAddress, Integer>) clusterServices.getCache("myControllerBurden");
+        if (myControllerBurden == null) {
+            log.error("\nFailed to get cache: {}", "myControllerBurden");
+        }
     }
 
     private void allocateCaches() {
@@ -392,6 +347,15 @@ public abstract class AbstractScheme {
             clusterServices.createCache(nodeConnectionsCacheName, EnumSet.of(IClusterServices.cacheMode.TRANSACTIONAL));
         } catch (CacheExistException cee) {
             log.debug("\nCache already exists: {}", nodeConnectionsCacheName);
+        } catch (CacheConfigException cce) {
+            log.error("\nCache configuration invalid - check cache mode");
+        } catch (Exception e) {
+            log.error("An error occured",e);
+        }
+        try {
+            clusterServices.createCache("myControllerBurden", EnumSet.of(IClusterServices.cacheMode.TRANSACTIONAL));
+            } catch (CacheExistException cee) {
+            log.debug("\nCache already exists: {}", "myControllerBurden");
         } catch (CacheConfigException cce) {
             log.error("\nCache configuration invalid - check cache mode");
         } catch (Exception e) {
@@ -450,4 +414,65 @@ public abstract class AbstractScheme {
         }
         return true;
     }
+    /*******************************************************
+     *               modified by ycy                       *
+     *******************************************************/
+    public Status updateNodeWithoutConstraint (Node node, InetAddress controller) {
+        if (node == null || controller == null) {
+            return new Status(StatusCode.BADREQUEST, "Invalid Node or Controller Address Specified.");
+        }
+
+        if (clusterServices == null || nodeConnections == null) {
+            return new Status(StatusCode.SUCCESS);
+        }
+        log.debug("Trying to Put {} to {}", controller.getHostAddress(), node.toString());
+
+        Set<InetAddress> oldControllers = nodeConnections.get(node);
+        Set<InetAddress> newControllers = new HashSet<InetAddress>(oldControllers);
+        if (newControllers.add(controller)) { // true -> controller exists
+             try {
+                 clusterServices.tbegin();
+                 if (newControllers.size() > 0) {
+                     if (!nodeConnections.replace(node, oldControllers, newControllers)) {
+                         clusterServices.trollback();
+                         try {
+                             Thread.sleep(100);
+                         } catch ( InterruptedException e) {}
+                         return updateNodeWithoutConstraint(node, controller);
+                     }
+                 } else {
+                     nodeConnections.remove(node);
+                 }
+                 clusterServices.tcommit();
+             } catch (Exception e) {
+                log.error("Exception in removing Controller from a Node", e);
+                try {
+                   clusterServices.trollback();
+                } catch (Exception e1) {
+                    log.error("Error Rolling back the node Connections Changes ", e);
+                }
+                return new Status(StatusCode.INTERNALERROR);
+            }
+        }
+        log.debug("Succeed in removing node {} from the controller {}", node.toString(), controller.getHostAddress());
+        return new Status(StatusCode.SUCCESS);
+    }
+
+    public Set<InetAddress> getWorkingControllers(){
+        Iterator<Entry<Node, Set<InetAddress>>> iter = nodeConnections.entrySet().iterator();
+        Set<InetAddress> result = new HashSet<InetAddress>();
+        while( iter.hasNext() ){
+            Entry<Node, Set<InetAddress>> entry =  iter.next();
+            Set<InetAddress> val = entry.getValue();
+            for( InetAddress addr: val){
+                if ( !result.contains(addr) ){
+                    result.add(addr);
+                }
+            }
+        }
+        return result;
+    }
+    /*******************************************************
+     *               modified by ycy                       *
+     *******************************************************/
 }

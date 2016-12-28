@@ -47,6 +47,11 @@
             <configuration>
               <pedantic>true</pedantic>
               <artifacts>
+				<artfiact>
+                  <id>balance.flow:0.1.0</id>
+                  <transitive>false</transitive>
+                  <override>false</override>
+                </artfiact>
                 <artfiact>
                   <id>org.slf4j:jcl-over-slf4j:${slf4j.version}</id>
                   <transitive>false</transitive>
@@ -449,6 +454,7 @@
           </webApp>
         </configuration>
       </plugin>
+	 
     </plugins>
   </build>
 </project>

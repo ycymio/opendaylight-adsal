@@ -438,8 +438,6 @@ public class ConnectionManager implements IConnectionManager,
         help.append("---Connection Manager---\n");
         help.append("\t scheme [<name>]                      - Print / Set scheme\n");
         help.append("\t printNodes [<controller>]            - Print connected nodes\n");
-        help.append("\t removeNodeTest [<ipRemoved>] [<ipAdded>]           - Update the master of the specified node\n");
-        help.append("\t getWorkingControllers                - get all the controllers dealt with packet_ins. \n");
         return help.toString();
     }
 
@@ -450,7 +448,6 @@ public class ConnectionManager implements IConnectionManager,
             return Collections.emptySet();
         return scheme.getControllers(node);
     }
-
     public void _removeNodeTest(CommandInterpreter ci){
         String ipRemoved = ci.nextArgument();
         String ipAdded = ci.nextArgument();
