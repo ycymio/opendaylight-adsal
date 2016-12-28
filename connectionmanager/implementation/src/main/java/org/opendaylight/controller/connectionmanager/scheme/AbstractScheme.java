@@ -458,17 +458,21 @@ public abstract class AbstractScheme {
         return new Status(StatusCode.SUCCESS);
     }
 
-    public Set<InetAddress> getWorkingControllers(){
+    public List<InetAddress> getWorkingControllers(){
         Iterator<Entry<Node, Set<InetAddress>>> iter = nodeConnections.entrySet().iterator();
-        Set<InetAddress> result = new HashSet<InetAddress>();
+        Set<InetAddress> resultSet = new HashSet<InetAddress>();
+        List<InetAddress> result = new ArrayList<InetAddress>();
         while( iter.hasNext() ){
             Entry<Node, Set<InetAddress>> entry =  iter.next();
             Set<InetAddress> val = entry.getValue();
             for( InetAddress addr: val){
-                if ( !result.contains(addr) ){
-                    result.add(addr);
+                if ( !resultSet.contains(addr) ){
+                    resultSet.add(addr);
                 }
             }
+        }
+        for (InetAddress address : resultSet) {
+            result.add(address);
         }
         return result;
     }
