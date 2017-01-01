@@ -8,6 +8,7 @@
 package org.opendaylight.controller.connectionmanager.scheme;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -26,6 +27,7 @@ import org.opendaylight.controller.clustering.services.IClusterServices;
 import org.opendaylight.controller.connectionmanager.ConnectionMgmtScheme;
 import org.opendaylight.controller.sal.connection.ConnectionLocality;
 import org.opendaylight.controller.sal.core.Node;
+import org.opendaylight.controller.sal.match.extensible.Match;
 import org.opendaylight.controller.sal.utils.Status;
 import org.opendaylight.controller.sal.utils.StatusCode;
 import org.slf4j.Logger;
@@ -479,4 +481,108 @@ public abstract class AbstractScheme {
     /*******************************************************
      *               modified by ycy                       *
      *******************************************************/
+    // 固定的映射关系
+    public void FixedMapping1() {
+ 		// 构造controller集合
+ 		System.out.println("FixedMapping::start Fixed FatTree Mapping TO 1 controllers");
+ 		if (nodeConnections == null) {
+ 			System.out.println("nodeConnection is null");
+ 		}
+ 		Set<Node>nodeSet = new HashSet<Node>();
+ 		nodeSet = new HashSet<Node>(nodeConnections.keySet());
+ 		for (Node node : nodeSet) {
+			try {
+				updateNodeWithoutConstraint(node, InetAddress.getByName("10.15.123.141"));
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+ 		}
+ 	}
+    
+ 	public void FixedMapping2() {
+ 		// 构造controller集合
+ 		System.out.println("FixedMapping::start Fixed FatTree Mapping TO 2 controllers");
+ 		List<InetAddress> controllerList = new ArrayList<InetAddress>();
+ 		try {
+ 			controllerList.add(InetAddress.getByName("10.15.123.141"));
+ 			controllerList.add(InetAddress.getByName("10.15.123.142"));
+ 		} catch (UnknownHostException e) {
+ 			e.printStackTrace();
+ 		}
+ 		if (nodeConnections == null) {
+ 			System.out.println("nodeConnection is null");
+ 		}
+ 		Set<Node>nodeSet = new HashSet<Node>();
+ 		nodeSet = new HashSet<Node>(nodeConnections.keySet());
+ 		for (Node node : nodeSet) {
+ 			long level = getLevel(node);
+ 			long number = getLowestNodeNumber(node);
+ 			//检查是不是判断逻辑错了还是不能用指定的那个函数
+ 			if (level == 1) {
+ 				if (number < 3) {
+ 					updateNodeWithoutConstraint(node, controllerList.get(0));
+ 				} else {
+ 					updateNodeWithoutConstraint(node, controllerList.get(1));
+ 				}
+ 			} else {
+ 				if (number < 5) {
+ 					updateNodeWithoutConstraint(node, controllerList.get(0));
+ 				} else {
+ 					updateNodeWithoutConstraint(node, controllerList.get(1));
+ 				}
+ 			}
+ 		}
+ 	}
+
+	public void FixedMapping4() {
+		// 构造controller集合
+		System.out.println("FixedMapping::start Fixed FatTree Mapping TO 4 Controllers");
+
+		List<InetAddress> controllerList = new ArrayList<InetAddress>();
+		try {
+			controllerList.add(InetAddress.getByName("10.15.123.141"));
+			controllerList.add(InetAddress.getByName("10.15.123.142"));
+			controllerList.add(InetAddress.getByName("10.15.123.143"));
+			controllerList.add(InetAddress.getByName("10.15.123.144"));
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		if (nodeConnections == null) {
+			System.out.println("nodeConnection is null");
+		}
+		Set<Node> nodeSet = new HashSet<Node>();
+		nodeSet = new HashSet<Node>(nodeConnections.keySet());
+		for (Node node : nodeSet) {
+			int level = (int) getLevel(node);
+			int number = (int) getLowestNodeNumber(node);
+			// 检查是不是判断逻辑错了还是不能用指定的那个函数
+			if (level == 1) {
+				int idx = (int)number-1;
+				System.out.println("node s"+node.getID() +"->" + controllerList.get(idx));
+				updateNodeWithoutConstraint(node, controllerList.get(idx));
+			} else {
+				//发现如果不是整除，例如5 经过下式计算idx = 2；
+				int idx = (int) (Math.ceil(number/2));
+				if (number%2 == 0) {
+					idx-=1;
+				}
+				System.out.println("node s"+node.getID() +"->" + controllerList.get(idx));
+				updateNodeWithoutConstraint(node, controllerList.get(idx));
+			}
+		}
+	}
+ 	// 拿到nodeID的千位数
+ 	private long getLevel(Node node) {
+ 		long nodeId = (long) node.getID();
+ 		long ans = (nodeId / 1000) % 10;
+ 		return ans;
+ 	}
+
+ 	// 拿到nodeId的个位数
+ 	private long getLowestNodeNumber(Node node) {
+ 		long nodeId = (long) node.getID();
+ 		long ans = nodeId%10;
+ 		return ans;
+ 	}
 }

@@ -91,11 +91,11 @@ public class PacketHandler implements IListenDataPacket {
 				IPv4 ipv4Pkt = (IPv4) l3Pkt;
 				int dstAddr = ipv4Pkt.getDestinationAddress();
 				InetAddress addr = intToInetAddress(dstAddr);
-				System.out.println("Pkt. to " + addr.toString()
-						+ " received by node " + node.getNodeIDString()
-						+ " on connector "
-						+ ingressConnector.getNodeConnectorIDString()
-						+ " 当前packetin总数为：" + packet_in_number);
+//				System.out.println("Pkt. to " + addr.toString()
+//						+ " received by node " + node.getNodeIDString()
+//						+ " on connector "
+//						+ ingressConnector.getNodeConnectorIDString()
+//						+ " 当前packetin总数为：" + packet_in_number);
 				return PacketResult.KEEP_PROCESSING;
 			}
 		}

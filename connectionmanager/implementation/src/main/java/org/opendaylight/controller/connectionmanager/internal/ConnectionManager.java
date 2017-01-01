@@ -476,4 +476,59 @@ public class ConnectionManager implements IConnectionManager,
             ci.println("\t"+address.getHostAddress());
         }
     }
+    
+    public void _FM1(CommandInterpreter ci){
+        AbstractScheme scheme = schemes.get(activeScheme);
+        if (scheme == null) {
+            ci.println("The scheme of connectionmanager is null.");
+            return;
+        }
+        scheme.FixedMapping1();
+    }
+    
+    public void _FM2(CommandInterpreter ci){
+        AbstractScheme scheme = schemes.get(activeScheme);
+        if (scheme == null) {
+            ci.println("The scheme of connectionmanager is null.");
+            return;
+        }
+        scheme.FixedMapping2();
+    }
+    public void _FM4(CommandInterpreter ci){
+        AbstractScheme scheme = schemes.get(activeScheme);
+        if (scheme == null) {
+            ci.println("The scheme of connectionmanager is null.");
+            return;
+        }
+        scheme.FixedMapping4();
+    }
+    public void _printNodeID(CommandInterpreter ci){
+    	String controller = ci.nextArgument();
+        if (controller == null) {
+            ci.println("Nodes connected to this controller : ");
+            if (this.getLocalNodes() == null) {
+                ci.println("None");
+            } else {
+            	Set<Node>nodeSet = getLocalNodes();
+                for (Node node : nodeSet) {
+					System.out.println("s"+node.getID()+" ");
+				}
+            }
+            return;
+        }
+        try {
+            InetAddress address = InetAddress.getByName(controller);
+            ci.println("Nodes connected to controller " + controller);
+            if (this.getNodes(address) == null) {
+                ci.println("None");
+            } else {
+            	Set<Node>nodeSet = getNodes(address);
+                for (Node node : nodeSet) {
+					System.out.println("s"+node.getID()+" ");
+				}
+            }
+        } catch (UnknownHostException e) {
+            logger.error("An error occured", e);
+        }
+    }
 }

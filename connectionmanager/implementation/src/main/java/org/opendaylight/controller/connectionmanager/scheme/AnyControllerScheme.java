@@ -8,6 +8,7 @@
 package org.opendaylight.controller.connectionmanager.scheme;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import org.opendaylight.controller.connectionmanager.IConnectionManager;
 import org.opendaylight.controller.sal.utils.ServiceHelper;
@@ -24,6 +25,7 @@ import java.util.TimerTask;
 
 import org.opendaylight.controller.clustering.services.IClusterGlobalServices;
 import org.opendaylight.controller.connectionmanager.ConnectionMgmtScheme;
+import org.opendaylight.controller.sal.core.ConstructionException;
 import org.opendaylight.controller.sal.core.Node;
 import org.opendaylight.controller.sal.utils.Status;
 import org.opendaylight.controller.sal.utils.StatusCode;
@@ -34,16 +36,16 @@ import balance.flow.PacketHandler;
 
 class AnyControllerScheme extends AbstractScheme {
 	private static AbstractScheme myScheme = null;
-	private int updateInterval = 5;
-	private int checkInterval = 5;
+	private int updateInterval = 1;
+	private int checkInterval = 3;
+	private int delay = 10;
 	private Timer myUpdateTimer;
 	private Timer checkTimer;
-
 	// 四个上下限
-	private int totalUpperLimit = 100;
-	private int totalLowerLimit = 0;
-	private int singleUpperLimit = 20;
-	private int singleLowerLimit = 0;
+	private int totalUpperLimit = 500000;
+	private int totalLowerLimit = 15000;
+	private int singleUpperLimit = 50000;
+	private int singleLowerLimit = 15000;
 
 	public static Map<Node, Integer> nodeburdenMap = new HashMap<Node, Integer>();
 	private List<Node> migratingNodes = new ArrayList<Node>();
@@ -53,26 +55,46 @@ class AnyControllerScheme extends AbstractScheme {
 
 	protected AnyControllerScheme(IClusterGlobalServices clusterServices) {
 		super(clusterServices, ConnectionMgmtScheme.ANY_CONTROLLER_ONE_MASTER);
-		// 定时 更新速率
-		myUpdateTimer = new Timer("my UpdateTimer");
-		myUpdateTimer.scheduleAtFixedRate(new TimerTask() {
-			public void run() {
-				// 同步负载
-				if (myControllerBurden != null) {
-					updateControllerBurden();
-				}
-			}
-		}, updateInterval * 1000L, (long) (1 * 2000L));
+		Thread updateThread = new updateBurdenThread();
+		updateThread.start();
+		Thread checkThread = new checkBurdenThread();
+		checkThread.start();
+	}
 
-		// 定时 检查负载
-		checkTimer = new Timer("my CheckTimer");
-		checkTimer.scheduleAtFixedRate(new TimerTask() {
-			public void run() {
-				if (myControllerBurden != null) {
-					checkBurden();
+	class updateBurdenThread extends Thread {
+		@Override
+		public void run() {
+			myUpdateTimer = new Timer("my UpdateTimer");
+			myUpdateTimer.scheduleAtFixedRate(new TimerTask() {
+				public void run() {
+					if (myControllerBurden != null) {
+						try {
+							updateControllerBurden();
+						} catch (Exception e) {
+							System.out.println("updater exception");
+						}
+					}
 				}
-			}
-		}, checkInterval * 1000L, (long) (1 * 2000L));
+			}, updateInterval * 1000L, (long) (delay * 2000L));
+		}
+	}
+
+	class checkBurdenThread extends Thread {
+		@Override
+		public void run() {
+			checkTimer = new Timer("my checker");
+			checkTimer.scheduleAtFixedRate(new TimerTask() {
+				public void run() {
+					try {
+						if (myControllerBurden != null) {
+							checkBurden();
+						}
+					} catch (Exception e) {
+						System.out.println("checker exception");
+					}
+				}
+			}, checkInterval * 1000L, (long) (delay * 2000L));
+		}
 	}
 
 	public static AbstractScheme getScheme(
@@ -88,36 +110,60 @@ class AnyControllerScheme extends AbstractScheme {
 		Set<InetAddress> controllers = nodeConnections.get(node);
 		if (controllers == null || controllers.size() == 0)
 			return true;
+		for (InetAddress controllerIP : controllers) {
+			if (controllerIP.equals(clusterServices.getMyAddress())) {
+				return true;
+			}
+		}
+		// FixedMapping怎么实现
+
 		return (controllers.size() == 1 && controllers.contains(clusterServices
 				.getMyAddress()));
 	}
 
 	private void updateControllerBurden() {
+		IConnectionManager connectionManager = (IConnectionManager) ServiceHelper
+				.getGlobalInstance(IConnectionManager.class, this);
+		Set<Node> localNodes = connectionManager.getLocalNodes();
+
 		// 更新控制器接受paccketIn的速率
-		int avg = PacketHandler.packet_in_number / updateInterval;// 5秒内平均每秒的packet-in速度
+		int avg = PacketHandler.packet_in_number / updateInterval;// updateInterval秒内平均每秒的packet-in速度
+		System.out.println("updater::" + clusterServices.getMyAddress() + " : "
+				+ avg + " p/s");
 		if (myControllerBurden.putIfAbsent(clusterServices.getMyAddress(), avg) != null) {
 			myControllerBurden
 					.replace(clusterServices.getMyAddress(), myControllerBurden
 							.get(clusterServices.getMyAddress()), avg);
 		}
-		// 更新本控制器连接交换机的消息上报速率。
 		PacketHandler.packet_in_number = 0;// 重新计数
 
-		IConnectionManager connectionManager = (IConnectionManager) ServiceHelper
-				.getGlobalInstance(IConnectionManager.class, this);
-		Set<Node> localNodes = connectionManager.getLocalNodes();
+		// 更新本控制器连接交换机的消息上报速率。
+		if (localNodes == null) {
+			return;
+		}
 		for (Node localNode : localNodes) {
 			if (PacketHandler.burden.containsKey(localNode)) {
 				int speed = PacketHandler.burden.get(localNode)
 						/ updateInterval;
-				System.out.println("遍历到交换机：" + localNode.toString()
-						+ "它的packetin计数为：" + speed + " -ptt");
 				nodeburdenMap.put(localNode, speed);// 更新这interval秒内的交换机的上报速率；
+				System.out.println("updater:: s" + localNode.getID() + " : "
+						+ nodeburdenMap.get(localNode) + "p/s");
 				Integer tmp_value = 0;// 重新计数
 				PacketHandler.burden.put(localNode, tmp_value);
 			}
 		}
+		updateTotalLimits();
 	}
+
+	private void checkerPrinter(int myBurden, int totalBurden) {
+		System.out.println("checker::single window:( " + singleLowerLimit + ","
+				+ singleUpperLimit + " )" + "  total window:( "
+				+ totalLowerLimit + "," + totalUpperLimit + " )");
+		System.out.println("checker::" + clusterServices.getMyAddress() + " : "
+				+ myBurden + " p/s  total: " + totalBurden + " p/s");
+	}
+
+	
 
 	private void checkBurden() {
 		IConnectionManager connectionManager = (IConnectionManager) ServiceHelper
@@ -127,45 +173,101 @@ class AnyControllerScheme extends AbstractScheme {
 		// 检查当前控制器的负载情况以及总体负载情况，并判断是否需要进行迁移。
 		int myBurden = myControllerBurden.get(clusterServices.getMyAddress());
 		int totalBurden = getTotalLoad();
-		if (myBurden < singleUpperLimit && myBurden > singleLowerLimit)
+		checkerPrinter(myBurden, totalBurden);
+
+		if (myBurden < singleUpperLimit && myBurden > singleLowerLimit) {
+			System.out.println("checker::全部正常");
 			return;
+		}
 		migratingNodes.clear();
 		if (myBurden >= singleUpperLimit) {// 本控制器负载超限
 			// 判断是否开启新机器
 			List<InetAddress> tmpControllerList = getWorkingControllers();
 			if (totalBurden > totalUpperLimit) {
+				System.out
+						.println("checker::"
+								+ clusterServices.getMyAddress().toString()
+								+ "超限,整体超限");
 				tmpControllerList = getNewWorkingControllers();
+			} else {
+				System.out.println("checker::"
+						+ clusterServices.getMyAddress().toString()
+						+ "超限，整体不超限");
 			}
 			// 逻辑上随机移除交换机，使得本控制器的负载回落到合理的范围内。
+			if (localNodes == null) {
+				System.out.println("checker::localNodes为空");
+				return;
+			}
 			int tempBurden = myBurden;
-			for (Iterator<Node> iterator = localNodes.iterator(); iterator
-					.hasNext();) {
-				Node node = (Node) iterator.next();
-				int nodeBurden = nodeburdenMap.get(node);
-				// 假设移除了该节点，判断控制器负载是不是落到了正常范围
-				tempBurden -= nodeBurden;
-				migratingNodes.add(node);
-				if (tempBurden < singleUpperLimit) {
-					break;
+			while (tempBurden > singleUpperLimit) {
+				Node node = getHighLoadNode();
+				if (node != null) {
+					tempBurden -= nodeburdenMap.get(node);
+					migratingNodes.add(node);
 				}
 			}
+			System.out.println("checker::migrationNodes Computation Complete!");
+			System.out.println("checker::将移除" + migratingNodes.size() + "个节点");
 			removeToFit(tmpControllerList);
+			updateTotalLimits();
 		} else {// 本控制器负载低于下限
+			System.out.println("checker::" + clusterServices.getMyAddress()
+					+ " : " + myBurden + "p/s 资源利用率低");
+			if (getWorkingControllers().size() <= 2) {// 保证至少有三个节点在工作
+				return;
+			}
+			// 如果集群中有多于三个节点在工作的话，判断总体是不是利用率低下，是的话，休眠自己。
 			if (totalBurden < totalLowerLimit) {
-				for (Node localNode : localNodes) {
-					migratingNodes.add(localNode);
-				}
+				migratingNodes = new ArrayList<Node>(localNodes);
 				removeToFit(getWorkingControllers());
+				System.out.println("checker::关闭:"
+						+ clusterServices.getMyAddress().toString());
+				// 更新总上限，下限
+				updateTotalLimits();
 			}
 		}
 	}
 
+	// 获得localNodes中贡献最大的sw
+	private Node getHighLoadNode() {
+		IConnectionManager connectionManager = (IConnectionManager) ServiceHelper
+				.getGlobalInstance(IConnectionManager.class, this);
+		Set<Node> localNodes = connectionManager.getLocalNodes();
+		int highLoad = 0;
+		Node node = null;
+		for (Node localNode : localNodes) {
+			if (nodeburdenMap.containsKey(localNode)) {
+				if (highLoad < nodeburdenMap.get(localNode)
+						&& (!migratingNodes.contains(localNode))) {
+					highLoad = nodeburdenMap.get(localNode);
+					node = localNode;
+				}
+			}
+		}
+		if (node != null) {
+			System.out.println("highLoadNode Selected: s" + node.getID());
+		}
+		return node;
+	}
+
+	// 更新总的负载上下限
+	private void updateTotalLimits() {
+		totalLowerLimit = singleLowerLimit * (getWorkingControllers().size());
+		totalUpperLimit = singleUpperLimit * (getWorkingControllers().size());
+	}
+
 	// 将待移除交换机列表中的交换机全部移除，每一次移除都选择集群中负载最轻的控制器。
 	private void removeToFit(List<InetAddress> controllerList) {
+		if (migratingNodes == null) {
+			System.out.println("removeToFit::migrationNodes为空");
+		}
 		for (Node node : migratingNodes) {
-			// 将这些交换机全部移交给别的控制器
 			InetAddress targetControllerIP = findLowestController(controllerList);
 			updateNodeWithoutConstraint(node, targetControllerIP);
+			System.out.println("removeToFit::"
+					+ clusterServices.getMyAddress().toString() + " 移除：s"
+					+ node.getID() + "给 " + targetControllerIP);
 		}
 		migratingNodes.clear();
 	}
@@ -183,8 +285,8 @@ class AnyControllerScheme extends AbstractScheme {
 
 	// 寻找到可用控制器中(除了自己以外的)负载最小的controllerIP
 	private InetAddress findLowestController(List<InetAddress> Controllers) {
-		InetAddress LowestLoadcontroller = null;
-		int lowestBurdern = 9999999;
+		InetAddress LowestLoadcontroller = clusterServices.getMyAddress();
+		int lowestBurdern = 99999999;
 		for (InetAddress controllerIP : Controllers) {
 			if (controllerIP.equals(clusterServices.getMyAddress()))
 				continue;
@@ -199,13 +301,20 @@ class AnyControllerScheme extends AbstractScheme {
 
 	// 逻辑上开启一台新的机器
 	private List<InetAddress> getNewWorkingControllers() {
-		List<InetAddress> tmpControllerList = getWorkingControllers();
+		List<InetAddress> tmpControllerList = new ArrayList<InetAddress>(
+				getWorkingControllers());
 		List<InetAddress> allControllersList = clusterServices
 				.getClusteredControllers();
 		List<InetAddress> workingList = getWorkingControllers();
+		if (allControllersList == null || tmpControllerList == null
+				|| workingList == null) {
+			return tmpControllerList;
+		}
 		for (InetAddress availableController : allControllersList) {
 			if (!workingList.contains(availableController)) {
 				// 找到一个在clusterNodes中但是不在workingNodes中的节点
+				System.out.println("getNewWorkingControllers::新开启控制器："
+						+ availableController);
 				tmpControllerList.add(availableController);
 				break;
 			}
@@ -228,7 +337,8 @@ class AnyControllerScheme extends AbstractScheme {
 			return new Status(StatusCode.SUCCESS);
 		}
 		log.debug("Trying to Put {} to {}", controller.getHostAddress(),
-				node.toString());
+
+		node.toString());
 
 		Set<InetAddress> oldControllers = nodeConnections.get(node);
 		if (oldControllers.size() > 1) {
