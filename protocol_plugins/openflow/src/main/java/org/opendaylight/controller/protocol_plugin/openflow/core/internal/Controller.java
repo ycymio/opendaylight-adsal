@@ -16,6 +16,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -380,6 +381,31 @@ public class Controller implements IController, CommandProvider, IPluginInConnec
         }
     }
 
+    /*******************************************************
+     *               modified by ycy                       *
+     *******************************************************/
+    public void _processTime(CommandInterpreter ci){
+        String msg = ci.nextArgument();
+        if(msg == null){
+            // TODO:
+            SwitchHandler.calculateProcessingTime();
+            List<Double> processingTime = SwitchHandler.getPerSecondProcessingTime();
+            Double nullValue = -1.0d;
+            for(int index = 0; index < processingTime.size(); ++index){
+                Double time = processingTime.get(index);
+                if( time.equals(nullValue) ){
+                    ci.println("\t" + index +" second: \t null");
+                }
+                else{
+                    ci.println("\t" + index +" second: \t " + time +" s");
+                }
+            }
+        }
+    }
+    /*******************************************************
+     *               modified by ycy                       *
+     *******************************************************/
+
     private void registerWithOSGIConsole() {
         BundleContext bundleContext = FrameworkUtil.getBundle(this.getClass())
                 .getBundleContext();
@@ -395,6 +421,7 @@ public class Controller implements IController, CommandProvider, IPluginInConnec
         help.append("\t controllerReset\n");
         help.append("\t controllerShowConnConfig\n");
         help.append("\t controllerShowQueueSize\n");
+        help.append("\t processTime: get the processing time of handling packet-ins. \n");
         return help.toString();
     }
 
