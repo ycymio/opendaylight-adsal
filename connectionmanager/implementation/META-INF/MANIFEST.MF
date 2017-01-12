@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1483266071433
+Bnd-LastModified: 1483505575684
 Build-Jdk: 1.7.0_80
 Built-By: odl_01
 Bundle-Activator: org.opendaylight.controller.connectionmanager.internal

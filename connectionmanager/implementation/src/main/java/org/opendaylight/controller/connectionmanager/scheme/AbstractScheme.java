@@ -492,7 +492,7 @@ public abstract class AbstractScheme {
  		nodeSet = new HashSet<Node>(nodeConnections.keySet());
  		for (Node node : nodeSet) {
 			try {
-				updateNodeWithoutConstraint(node, InetAddress.getByName("10.15.123.141"));
+				updateNodeWithoutConstraint(node, InetAddress.getByName("10.15.123.143"));
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -505,8 +505,8 @@ public abstract class AbstractScheme {
  		System.out.println("FixedMapping::start Fixed FatTree Mapping TO 2 controllers");
  		List<InetAddress> controllerList = new ArrayList<InetAddress>();
  		try {
- 			controllerList.add(InetAddress.getByName("10.15.123.141"));
- 			controllerList.add(InetAddress.getByName("10.15.123.142"));
+ 			controllerList.add(InetAddress.getByName("10.15.123.143"));
+ 			controllerList.add(InetAddress.getByName("10.15.123.144"));
  		} catch (UnknownHostException e) {
  			e.printStackTrace();
  		}
@@ -585,4 +585,7 @@ public abstract class AbstractScheme {
  		long ans = nodeId%10;
  		return ans;
  	}
+ 	public void startChecker() {
+		;
+	}
 }

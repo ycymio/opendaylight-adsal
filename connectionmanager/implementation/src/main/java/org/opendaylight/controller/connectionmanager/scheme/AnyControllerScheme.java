@@ -37,16 +37,16 @@ import balance.flow.PacketHandler;
 class AnyControllerScheme extends AbstractScheme {
 	private static AbstractScheme myScheme = null;
 	private int updateInterval = 1;
-	private int checkInterval = 3;
+	private int checkInterval = 1;
 	private int delay = 10;
 	private Timer myUpdateTimer;
 	private Timer checkTimer;
 	// 四个上下限
-	private int totalUpperLimit = 500000;
-	private int totalLowerLimit = 15000;
-	private int singleUpperLimit = 50000;
-	private int singleLowerLimit = 15000;
-
+	private int totalUpperLimit = 20000;
+	private int totalLowerLimit = 2000;
+	private int singleUpperLimit = 20000;
+	private int singleLowerLimit = 2000;
+	Thread checkThread = new checkBurdenThread();
 	public static Map<Node, Integer> nodeburdenMap = new HashMap<Node, Integer>();
 	private List<Node> migratingNodes = new ArrayList<Node>();
 
@@ -57,7 +57,7 @@ class AnyControllerScheme extends AbstractScheme {
 		super(clusterServices, ConnectionMgmtScheme.ANY_CONTROLLER_ONE_MASTER);
 		Thread updateThread = new updateBurdenThread();
 		updateThread.start();
-		Thread checkThread = new checkBurdenThread();
+		
 		checkThread.start();
 	}
 
@@ -72,6 +72,7 @@ class AnyControllerScheme extends AbstractScheme {
 							updateControllerBurden();
 						} catch (Exception e) {
 							System.out.println("updater exception");
+							e.printStackTrace();
 						}
 					}
 				}
@@ -91,6 +92,7 @@ class AnyControllerScheme extends AbstractScheme {
 						}
 					} catch (Exception e) {
 						System.out.println("checker exception");
+						e.printStackTrace();
 					}
 				}
 			}, checkInterval * 1000L, (long) (delay * 2000L));
@@ -116,7 +118,6 @@ class AnyControllerScheme extends AbstractScheme {
 			}
 		}
 		// FixedMapping怎么实现
-
 		return (controllers.size() == 1 && controllers.contains(clusterServices
 				.getMyAddress()));
 	}
@@ -147,7 +148,7 @@ class AnyControllerScheme extends AbstractScheme {
 						/ updateInterval;
 				nodeburdenMap.put(localNode, speed);// 更新这interval秒内的交换机的上报速率；
 				System.out.println("updater:: s" + localNode.getID() + " : "
-						+ nodeburdenMap.get(localNode) + "p/s");
+						+ nodeburdenMap.get(localNode) + " p/s");
 				Integer tmp_value = 0;// 重新计数
 				PacketHandler.burden.put(localNode, tmp_value);
 			}
@@ -162,8 +163,6 @@ class AnyControllerScheme extends AbstractScheme {
 		System.out.println("checker::" + clusterServices.getMyAddress() + " : "
 				+ myBurden + " p/s  total: " + totalBurden + " p/s");
 	}
-
-	
 
 	private void checkBurden() {
 		IConnectionManager connectionManager = (IConnectionManager) ServiceHelper
@@ -213,15 +212,16 @@ class AnyControllerScheme extends AbstractScheme {
 			updateTotalLimits();
 		} else {// 本控制器负载低于下限
 			System.out.println("checker::" + clusterServices.getMyAddress()
-					+ " : " + myBurden + "p/s 资源利用率低");
+					+ " : " + myBurden + " p/s 资源利用率低");
 			if (getWorkingControllers().size() <= 2) {// 保证至少有三个节点在工作
+				System.out.println("checker::节点数量少，不实施节能");
 				return;
 			}
 			// 如果集群中有多于三个节点在工作的话，判断总体是不是利用率低下，是的话，休眠自己。
 			if (totalBurden < totalLowerLimit) {
 				migratingNodes = new ArrayList<Node>(localNodes);
 				removeToFit(getWorkingControllers());
-				System.out.println("checker::关闭:"
+				System.out.println("checker::节能策略：关闭:"
 						+ clusterServices.getMyAddress().toString());
 				// 更新总上限，下限
 				updateTotalLimits();
