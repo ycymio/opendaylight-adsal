@@ -97,6 +97,7 @@
 
     <!-- OpenEXI third party lib for netconf-->
 
+    <org.openflow.openflowj>1.0.5</org.openflow.openflowj>
     <exi.nagasena.version>0000.0002.0038.0</exi.nagasena.version>
     <felix.util.version>1.6.0</felix.util.version>
     <filtervalve.version>1.4.4-SNAPSHOT</filtervalve.version>
@@ -1707,11 +1708,6 @@
         <groupId>org.opendaylight.controller.thirdparty</groupId>
         <artifactId>org.apache.catalina.filters.CorsFilter</artifactId>
         <version>${corsfilter.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.opendaylight.controller.thirdparty</groupId>
-        <artifactId>org.openflow.openflowj</artifactId>
-        <version>1.0.2</version>
       </dependency>
       <dependency>
         <groupId>org.opendaylight.yangtools</groupId>
