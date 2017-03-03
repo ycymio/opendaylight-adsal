@@ -8,6 +8,7 @@
 package org.opendaylight.controller.connectionmanager.scheme;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -297,6 +298,14 @@ public abstract class AbstractScheme {
         if (isConnectionAllowed(node)) {
             return putNodeToController(node, controller);
         } else {
+            if( name.equalsIgnoreCase("NO_MASTER")){
+                // construct unused InetAdress with it. Maybe modified later.
+                try {
+                    return putNodeToController(node, InetAddress.getByName("0.0.0.0"));
+                } catch (UnknownHostException e) {
+                    e.printStackTrace();
+                }
+            }
             return new Status(StatusCode.NOTALLOWED);
         }
     }

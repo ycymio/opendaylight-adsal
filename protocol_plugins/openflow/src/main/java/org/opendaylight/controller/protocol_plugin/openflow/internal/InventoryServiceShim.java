@@ -408,7 +408,7 @@ public class InventoryServiceShim implements IContainerListener,
             isNodeLocal = connectionOutService.isLocal(nodeConnector.getNode());
         }
 
-        if (isNodeLocal) {
+        if (isNodeLocal || System.getProperty("connection.scheme").equalsIgnoreCase("No_Master") ) {
             // notify other containers
             Set<String> containers = (nodeConnectorContainerMap.get(nodeConnector) == null) ? new HashSet<String>()
                     : new HashSet<String>(nodeConnectorContainerMap.get(nodeConnector));

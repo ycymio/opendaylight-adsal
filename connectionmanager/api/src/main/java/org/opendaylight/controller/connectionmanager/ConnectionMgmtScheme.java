@@ -39,6 +39,11 @@ public enum ConnectionMgmtScheme {
     LOAD_BALANCED("Connect nodes to controllers based on the Controller Load"),
 
     /**
+     * Used by ycy when we need all the opendaylight controller to be the slave in the cluster.
+     */
+    NO_MASTER("No nodes need to be the master in the cluster"),
+
+    /**
      * Container based scheme will let the nodes connect with controller based
      * on the container configuration.
      */

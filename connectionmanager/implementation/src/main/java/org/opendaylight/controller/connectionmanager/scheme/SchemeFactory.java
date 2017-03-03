@@ -20,6 +20,8 @@ public class SchemeFactory {
             return LoadBalancedScheme.getScheme(clusterServices);
         } else if (scheme == ConnectionMgmtScheme.ANY_CONTROLLER_ONE_MASTER) {
             return AnyControllerScheme.getScheme(clusterServices);
+        } else if (scheme == ConnectionMgmtScheme.NO_MASTER) {
+            return NoMaster.getScheme(clusterServices);
         }
         return null;
     }
