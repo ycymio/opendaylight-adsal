@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,6 +32,7 @@ import org.opendaylight.controller.protocol_plugin.openflow.core.IController;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IMessageListener;
 import org.opendaylight.controller.protocol_plugin.openflow.core.ISwitch;
 import org.opendaylight.controller.protocol_plugin.openflow.core.ISwitchStateListener;
+import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionContent;
 import org.opendaylight.controller.sal.connection.ConnectionConstants;
 import org.opendaylight.controller.sal.connection.IPluginInConnectionService;
 import org.opendaylight.controller.sal.core.Node;
@@ -384,23 +386,36 @@ public class Controller implements IController, CommandProvider, IPluginInConnec
     /*******************************************************
      *               modified by ycy                       *
      *******************************************************/
-    public void _processTime(CommandInterpreter ci){
-        String msg = ci.nextArgument();
-        if(msg == null){
-            // TODO:
-            SwitchHandler.calculateProcessingTime();
-            List<Double> processingTime = SwitchHandler.getPerSecondProcessingTime();
-            Double nullValue = -1.0d;
-            for(int index = 0; index < processingTime.size(); ++index){
-                Double time = processingTime.get(index);
-                if( time.equals(nullValue) ){
-                    ci.println("\t" + index +" second: \t null");
-                }
-                else{
-                    ci.println("\t" + index +" second: \t " + time +" s");
-                }
+    // TODO:
+//    public void _processTime(CommandInterpreter ci){
+//        String msg = ci.nextArgument();
+//        if(msg == null){
+//            Double nullValue = -1.0d;
+//            for(int index = 0; index < processingTime.size(); ++index){
+//                Double time = processingTime.get(index);
+//                if( time.equals(nullValue) ){
+//                    ci.println("\t" + index +" second: \t null");
+//                }
+//                else{
+//                    ci.println("\t" + index +" second: \t " + time +" s");
+//                }
+//            }
+//        }
+//    }
+    protected static List<DetectionContent> dectionContents = new CopyOnWriteArrayList<DetectionContent>();
+
+    public void _listSendFM(CommandInterpreter ci) {
+        ci.println("  The Sending Detected Content test.");
+        List<DetectionContent> content = dectionContents;
+        if ( content == null || content.size() == 0  ) {
+            ci.println("\t the Detection Content is null");
+        }
+        else {
+            for( DetectionContent dc : content ) {
+                ci.println("\t " + dc);
             }
         }
+        ci.println("  The number of Sending Switch Detected Content is : " + content.size());
     }
     /*******************************************************
      *               modified by ycy                       *

@@ -11,6 +11,7 @@ package org.opendaylight.controller.protocol_plugin.openflow.internal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,6 +24,7 @@ import org.opendaylight.controller.protocol_plugin.openflow.IInventoryShimExtern
 import org.opendaylight.controller.protocol_plugin.openflow.core.IController;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IMessageListener;
 import org.opendaylight.controller.protocol_plugin.openflow.core.ISwitch;
+import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionContent;
 import org.opendaylight.controller.sal.connection.IPluginOutConnectionService;
 import org.opendaylight.controller.sal.core.ContainerFlow;
 import org.opendaylight.controller.sal.core.IContainerAware;
@@ -45,6 +47,8 @@ import org.opendaylight.controller.sal.utils.StatusCode;
 import org.openflow.protocol.OFError;
 import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFFlowRemoved;
+import org.openflow.protocol.OFFlowRemoved.OFFlowRemovedReason;
+import org.openflow.protocol.OFMatch;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPort;
 import org.openflow.protocol.OFType;
@@ -427,14 +431,75 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
                         + " flow message: " : action + " the flow: ") + cause;
     }
 
+    /*******************************************************
+     *              down modified by ycy                     *
+     *******************************************************/
+    // TODO:
     @Override
     public void receive(ISwitch sw, OFMessage msg) {
         if (msg instanceof OFFlowRemoved) {
-            handleFlowRemovedMessage(sw, (OFFlowRemoved) msg);
+            // modified by ycy
+            if( ((OFFlowRemoved) msg).getReason() == OFFlowRemovedReason.OFPRR_DELETE
+                    || ((OFFlowRemoved) msg).getReason() == OFFlowRemovedReason.OFPRR_HARD_TIMEOUT_TEST
+                    || ((OFFlowRemoved) msg).getReason() == OFFlowRemovedReason.OFPRR_IDLE_TIMEOUT ){
+                handleFlowRemovedMessage(sw, (OFFlowRemoved) msg);
+                System.out.println("OFFlowRemoved");
+            }
+            else {
+                handleFlowRemovedAddMessage(sw, (OFFlowRemoved)msg);
+            }
         } else if (msg instanceof OFError) {
             handleErrorMessage(sw, (OFError) msg);
         }
     }
+
+    private static List<DetectionContent> dectionControllerContents = new ArrayList<DetectionContent>();
+    private static List<DetectionContent> dectionSwitchContents = new ArrayList<DetectionContent>();
+    // modified by ycy
+
+    private void handleFlowRemovedAddMessage(ISwitch sw, OFFlowRemoved msg) {
+        OFMatch match = msg.getMatch();
+        if (( match.getWildcards() & OFMatch.OFPFW_DL_SRC) == 0) {
+            DetectionContent dc = new DetectionContent(msg.getMatch(), sw.getId(),  msg.getXid());
+            if ( (msg.getXid() & 0x00010000) == 0 ) {
+                dectionControllerContents.add(dc);
+            }
+            else {
+                dectionSwitchContents.add(dc);
+            }
+//            System.out.println(" - - - FlowProgrammerService" + Thread.currentThread().getName() + " " + dc);
+        }
+    }
+
+    public void _listRecCFM(CommandInterpreter ci) {
+        ci.println("  The Receiving Controller Detected Content is : ");
+        if ( dectionControllerContents == null || dectionControllerContents.size() == 0 ) {
+            ci.println("\t the Controller Detection Content is null");
+        }
+        else {
+            for( DetectionContent dc : dectionControllerContents ) {
+                ci.println("\t " + dc);
+            }
+        }
+        ci.println("  The number of Receiving Controller Detected Content is : " + dectionControllerContents.size());
+    }
+
+    public void _listRecSFM(CommandInterpreter ci) {
+        ci.println("  The Receiving Switch Detected Content is : ");
+        if ( dectionSwitchContents == null || dectionSwitchContents.size() == 0 ) {
+            ci.println("\t the Controller Detection Content is null");
+            return;
+        }
+        else {
+            for( DetectionContent dc : dectionSwitchContents ) {
+                ci.println("\t " + dc);
+            }
+        }
+        ci.println("  The number of Receiving Switch Detected Content is : " + dectionSwitchContents.size());
+    }
+    /*******************************************************
+     *              up modified by ycy                     *
+     *******************************************************/
 
     private void handleFlowRemovedMessage(ISwitch sw, OFFlowRemoved msg) {
         Node node = NodeCreator.createOFNode(sw.getId());
@@ -855,4 +920,5 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
     public void containerDestroy(String containerName) {
         containerToNc.remove(containerName);
     }
+
 }

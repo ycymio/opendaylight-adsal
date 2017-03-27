@@ -35,9 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IController;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IMessageReadWrite;
 import org.opendaylight.controller.protocol_plugin.openflow.core.ISwitch;
-import org.opendaylight.controller.sal.packet.Ethernet;
-import org.opendaylight.controller.sal.packet.IPv4;
-import org.opendaylight.controller.sal.utils.NetUtils;
+import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionContent;
 import org.openflow.protocol.OFBarrierReply;
 import org.openflow.protocol.OFBarrierRequest;
 import org.openflow.protocol.OFEchoReply;
@@ -48,7 +46,6 @@ import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFGetConfigReply;
 import org.openflow.protocol.OFMatch;
 import org.openflow.protocol.OFMessage;
-import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFPhysicalPort.OFPortConfig;
@@ -61,8 +58,11 @@ import org.openflow.protocol.OFSetConfig;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.OFType;
+import org.openflow.protocol.action.OFAction;
+import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.util.HexString;
+import org.openflow.util.U16;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -418,22 +418,25 @@ public class SwitchHandler implements ISwitch{
                 processStatsReply((OFStatisticsReply) msg);
                 break;
             case PACKET_IN:
-                // TODO:
-                try{
-                    byte[] data = ((OFPacketIn)msg).getPacketData();
-                    Ethernet res = new Ethernet();
-                    res.deserialize(data, 0, data.length * NetUtils.NumBitsInAByte);
-                    if( res.getPayload() instanceof IPv4){
-                        synchronized(SwitchHandler.class){
-                            inTime.add(System.currentTimeMillis());
-                        }
-                    }
-                    /*******************************************************
-                     *              up modified by ycy                     *
-                     *******************************************************/
-                } catch (Exception e) {
-                    logger.warn("Failed to decode packet: {}", e.getMessage());
-                }
+//                logger.warn("PACKET_IN Message here");
+//                try{
+//                    byte[] data = ((OFPacketIn)msg).getPacketData();
+//                    Ethernet res = new Ethernet();
+//                    res.deserialize(data, 0, data.length * NetUtils.NumBitsInAByte);
+//                    if( res.getPayload() instanceof IPv4){
+//                        synchronized(SwitchHandler.class){
+//                            inTime.add(System.currentTimeMillis());
+//                        }
+//                    }
+//                    /*******************************************************
+//                     *              up modified by ycy                     *
+//                     *******************************************************/
+//                } catch (Exception e) {
+//                    logger.warn("Failed to decode packet: {}", e.getMessage());
+//                }
+                break;
+            case FLOW_REMOVED:
+//                logger.warn("Flow removed Message here");
                 break;
             default:
                 break;
@@ -513,7 +516,7 @@ public class SwitchHandler implements ISwitch{
                     (isOperational() ? HexString.toHexString(sid) : "unknown"));
             return;
         }
-        logger.debug("Caught exception: ", e);
+        logger.error("Caught exception: ", e); // TODO: debug -闂侀潧妫撮幏锟� error
 
         // notify core of this error event and disconnect the switch
         ((Controller) core).takeSwitchEventError(this);
@@ -783,65 +786,67 @@ public class SwitchHandler implements ISwitch{
 //    private int inCount = 0;
 //    private int outCount = 0;
 
-    // TODO:
-    private static final Long startTime = System.currentTimeMillis();
-    private static List<Long> inTime = new ArrayList<Long>();
-    private static List<Long> outTime = new ArrayList<Long>();
-    private static List<Double> processingTime = new ArrayList<Double>(); // 1000s
+//    private static final Long startTime = System.currentTimeMillis();
+//    private static List<Long> inTime = new ArrayList<Long>();
+//    private static List<Long> outTime = new ArrayList<Long>();
+//    private static List<Double> processingTime = new ArrayList<Double>(); // 1000s
 
     /**
      * better not invoke it during the packet-in received time.
      */
-    public static void calculateProcessingTime(){
-        if( inTime == null || inTime.size() == 0){
-            return;
-        }
-        int startZone = processingTime.size()*1000;
-        Long endTime = System.currentTimeMillis();
-        List<Long> inRemove = new ArrayList<Long>();
-        List<Long> outRemove = new ArrayList<Long>();
-        int index = 0;
-        if( outTime.size() != inTime.size()){
-            logger.warn("The number of PACKET_IN IPv4(" + inTime.size() + ") is not equal to that of PACKET_OUT IPv4(" + outTime.size() + ")");
-        }
-        synchronized(SwitchHandler.class){
-            while( startTime + startZone <= endTime ){
-                double result = 0.0;
-                int num = 0;
-                int diff = 0;
-                while( index < inTime.size() && index < outTime.size() && inTime.get(index) - startTime <= startZone + 1000 ){
-                    if( outTime.get(index) < inTime.get(index)){
-                        logger.warn("The time(" + inTime.get(index) + ") of PACKET_IN IPv4 is later than that(" + outTime.get(index) + ") of PACKET_OUT IPv4");
-                    }
-                    else{
-                        diff += outTime.get(index) - inTime.get(index);
-                        ++num;
-                    }
-                    ++index;
-                }
-                if( num == 0 ){
-                    result = -1.0; // represents during the stage, no packet-in is received.
-                }
-                else{
-                    result = (double)diff/num;
-                }
-                processingTime.add(result);
-                startZone += 1000;
-            }
-            inRemove.clear();
-            outRemove.clear();
-        }
-    }
+//    public static void calculateProcessingTime(){
+//        if( inTime == null || inTime.size() == 0){
+//            return;
+//        }
+//        int startZone = processingTime.size()*1000;
+//        Long endTime = System.currentTimeMillis();
+//        List<Long> inRemove = new ArrayList<Long>();
+//        List<Long> outRemove = new ArrayList<Long>();
+//        int index = 0;
+////        if( outTime.size() != inTime.size()){
+////            logger.warn("The number of PACKET_IN IPv4(" + inTime.size() + ") is not equal to that of PACKET_OUT IPv4(" + outTime.size() + ")");
+////        }
+//        synchronized(SwitchHandler.class){
+//            while( startTime + startZone <= endTime ){
+//                double result = 0.0;
+//                int num = 0;
+//                int diff = 0;
+//                while( index < inTime.size() && index < outTime.size() && inTime.get(index) - startTime <= startZone + 1000 ){
+//                    if( outTime.get(index) < inTime.get(index)){
+////                        logger.warn("The time(" + inTime.get(index) + ") of PACKET_IN IPv4 is later than that(" + outTime.get(index) + ") of PACKET_OUT IPv4");
+//                    }
+//                    else{
+//                        diff += outTime.get(index) - inTime.get(index);
+//                        ++num;
+//                    }
+//                    ++index;
+//                }
+//                if( num == 0 ){
+//                    result = -1.0; // represents during the stage, no packet-in is received.
+//                }
+//                else{
+//                    result = (double)diff/num;
+//                }
+//                processingTime.add(result);
+//                startZone += 1000;
+//            }
+//            inRemove.clear();
+//            outRemove.clear();
+//        }
+//    }
 
-    public static List<Double> getPerSecondProcessingTime(){
-        if( outTime.size() != inTime.size()){
-            logger.warn("The number of PACKET_IN IPv4(" + inTime.size() + ") is not equal to that of PACKET_OUT IPv4(" + outTime.size() + ")");
-        }
-        return processingTime;
-    }
+//    public static List<Double> getPerSecondProcessingTime(){
+//        if( outTime.size() != inTime.size()){
+//            logger.warn("The number of PACKET_IN IPv4(" + inTime.size() + ") is not equal to that of PACKET_OUT IPv4(" + outTime.size() + ")");
+//        }
+//        return processingTime;
+//    }
     /*******************************************************
      *               modified by ycy                       *
      *******************************************************/
+    // TODO:
+    protected static Map<Long, List<OFPacketOut>> packetOut = new ConcurrentHashMap<Long, List<OFPacketOut>>();
+    private boolean isMaster = true;
 
     /*
      * Transmit thread polls the message out of the priority queue and invokes
@@ -854,37 +859,84 @@ public class SwitchHandler implements ISwitch{
             while (running) {
                 try {
                     PriorityMessage pmsg = transmitQ.take();
-                    msgReadWriteService.asyncSend(pmsg.msg);
-
                     OFMessage msg = pmsg.getMsg();
-                    if( msg instanceof OFPacketOut){
-                        try{
-                            byte[] data = ((OFPacketOut) msg).getPacketData();
-                            Ethernet res = new Ethernet();
-                            res.deserialize(data, 0, data.length * NetUtils.NumBitsInAByte);
-                            if(res.getPayload() instanceof IPv4){
-                                synchronized(SwitchHandler.class){
-                                    outTime.add(System.currentTimeMillis());
-                                }
-                                System.out.println("SwitchHandler(" + sid + "): The number of PACKET_IN is " + inTime.size() + "\n");
-                                System.out.println("SwitchHandler(" + sid + "): The number of PACKET_OUT is " + outTime.size() + "\n");
-                                if( outTime.size() != inTime.size()){
-                                    logger.warn("The number of PACKET_IN IPv4 is not equal to that of PACKET_OUT IPv4");
-                                }
+                    if ( msg instanceof OFFlowMod || msg instanceof OFPacketOut) {
+                        if( msg instanceof OFPacketOut ) {
+                            Long id = getId();
+                            if ( packetOut.containsKey(id)) {
+                                List<OFPacketOut> list = packetOut.get(id);
+                                list.add((OFPacketOut) msg);
+                                packetOut.put(id, list);
                             }
-                        } catch (Exception e) {
-                            logger.warn("Failed to decode packet: {}", e.getMessage());
+                            else {
+                                List<OFPacketOut> list = new ArrayList<OFPacketOut>();
+                                list.add((OFPacketOut) msg);
+                                packetOut.put(id, list);
+                            }
                         }
-                        /*******************************************************
-                         *              up modified by ycy                     *
-                         *******************************************************/
+                        else {
+                            List<OFAction> actionList = ((OFFlowMod)msg).getActions();
+                            int port = Integer.MIN_VALUE;
+                            int xid = 0;
+                            if ( actionList != null ) {
+                                for( int i = 0; i < actionList.size(); ++i ) {
+                                    OFAction ac = actionList.get(i);
+                                    if ( ac instanceof OFActionOutput ) {
+                                        port = U16.f(((OFActionOutput) ac).getPort());
+                                    }
+                                }
+                                for ( OFAction action : ((OFFlowMod)msg).getActions()) {
+                                    if ( action instanceof OFActionOutput ) {
+                                        action = (OFActionOutput)action;
+                                        xid = ((OFActionOutput) action).getPort();
+                                    }
+                                }
+                                DetectionContent dc = new DetectionContent(((OFFlowMod)msg).getMatch(), thisISwitch.getId(), xid);
+
+                                System.out.println(" - - - SwitchHandler" + Thread.currentThread().getName() + " " + dc);// TODO: 闁哄鏅涘ú锕傚箮閿燂拷
+                                Controller.dectionContents.add(dc);
+                            }
+                        }
                     }
+                    if ( isMaster || !( msg instanceof OFFlowMod || msg instanceof OFPacketOut) ) {
+                        msgReadWriteService.asyncSend(pmsg.msg);
+                    }
+//                    if( msg instanceof OFPacketOut){
+//                        try{
+//                            byte[] data = ((OFPacketOut) msg).getPacketData();
+//                            Ethernet res = new Ethernet();
+//                            res.deserialize(data, 0, data.length * NetUtils.NumBitsInAByte);
+//                            if(res.getPayload() instanceof IPv4){
+//                                synchronized(SwitchHandler.class){
+//                                    outTime.add(System.currentTimeMillis());
+//                                }
+//                                if (res.getPayload().getPayload() instanceof ICMP) {
+//                                    System.out.println("SwitchHandler packet_out: ICMP");
+//                                }
+//                                else {
+//                                    System.out.println("SwitchHandler packet_out: " + res.getPayload().getPayload().toString());
+//                                }
+//                                System.out.println("SwitchHandler(" + sid + "): The number of PACKET_IN is " + inTime.size() + "\n");
+//                                System.out.println("SwitchHandler(" + sid + "): The number of PACKET_OUT is " + outTime.size() + "\n");
+//                                if( outTime.size() != inTime.size()){
+//                                    logger.warn("The number of PACKET_IN IPv4 is not equal to that of PACKET_OUT IPv4");
+//                                }
+//                            }
+//                        } catch (Exception e) {
+//                            logger.warn("Failed to decode packet: {}", e.getMessage());
+//                        }
+//                    }
                     /*
                      * If syncReply is set to true, wait for the response back.
                      */
-                    if (pmsg.syncReply) {
-                        syncMessageInternal(pmsg.msg, pmsg.msg.getXid(), false);
+                    if ( isMaster || !( msg instanceof OFFlowMod || msg instanceof OFPacketOut) ) {
+                        if (pmsg.syncReply) {
+                            syncMessageInternal(pmsg.msg, pmsg.msg.getXid(), false);
+                        }
                     }
+                    /*******************************************************
+                     *              up modified by ycy                     *
+                     *******************************************************/
                 } catch (InterruptedException ie) {
                     reportError(new InterruptedException("PriorityMessageTransmit thread interrupted"));
                 } catch (Exception e) {
