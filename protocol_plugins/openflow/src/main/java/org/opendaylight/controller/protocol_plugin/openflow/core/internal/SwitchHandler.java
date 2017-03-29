@@ -35,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IController;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IMessageReadWrite;
 import org.opendaylight.controller.protocol_plugin.openflow.core.ISwitch;
-import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionContent;
 import org.openflow.protocol.OFBarrierReply;
 import org.openflow.protocol.OFBarrierRequest;
 import org.openflow.protocol.OFEchoReply;
@@ -58,11 +57,8 @@ import org.openflow.protocol.OFSetConfig;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.OFType;
-import org.openflow.protocol.action.OFAction;
-import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.util.HexString;
-import org.openflow.util.U16;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -860,44 +856,44 @@ public class SwitchHandler implements ISwitch{
                 try {
                     PriorityMessage pmsg = transmitQ.take();
                     OFMessage msg = pmsg.getMsg();
-                    if ( msg instanceof OFFlowMod || msg instanceof OFPacketOut) {
-                        if( msg instanceof OFPacketOut ) {
-                            Long id = getId();
-                            if ( packetOut.containsKey(id)) {
-                                List<OFPacketOut> list = packetOut.get(id);
-                                list.add((OFPacketOut) msg);
-                                packetOut.put(id, list);
-                            }
-                            else {
-                                List<OFPacketOut> list = new ArrayList<OFPacketOut>();
-                                list.add((OFPacketOut) msg);
-                                packetOut.put(id, list);
-                            }
-                        }
-                        else {
-                            List<OFAction> actionList = ((OFFlowMod)msg).getActions();
-                            int port = Integer.MIN_VALUE;
-                            int xid = 0;
-                            if ( actionList != null ) {
-                                for( int i = 0; i < actionList.size(); ++i ) {
-                                    OFAction ac = actionList.get(i);
-                                    if ( ac instanceof OFActionOutput ) {
-                                        port = U16.f(((OFActionOutput) ac).getPort());
-                                    }
-                                }
-                                for ( OFAction action : ((OFFlowMod)msg).getActions()) {
-                                    if ( action instanceof OFActionOutput ) {
-                                        action = (OFActionOutput)action;
-                                        xid = ((OFActionOutput) action).getPort();
-                                    }
-                                }
-                                DetectionContent dc = new DetectionContent(((OFFlowMod)msg).getMatch(), thisISwitch.getId(), xid);
-
-                                System.out.println(" - - - SwitchHandler" + Thread.currentThread().getName() + " " + dc);// TODO: 闁哄鏅涘ú锕傚箮閿燂拷
-                                Controller.dectionContents.add(dc);
-                            }
-                        }
-                    }
+//                    if ( msg instanceof OFFlowMod || msg instanceof OFPacketOut) {
+//                        if( msg instanceof OFPacketOut ) {
+//                            Long id = getId();
+//                            if ( packetOut.containsKey(id)) {
+//                                List<OFPacketOut> list = packetOut.get(id);
+//                                list.add((OFPacketOut) msg);
+//                                packetOut.put(id, list);
+//                            }
+//                            else {
+//                                List<OFPacketOut> list = new ArrayList<OFPacketOut>();
+//                                list.add((OFPacketOut) msg);
+//                                packetOut.put(id, list);
+//                            }
+//                        }
+//                        else {
+//                            List<OFAction> actionList = ((OFFlowMod)msg).getActions();
+//                            int port = Integer.MIN_VALUE;
+//                            int xid = 0;
+//                            if ( actionList != null ) {
+//                                for( int i = 0; i < actionList.size(); ++i ) {
+//                                    OFAction ac = actionList.get(i);
+//                                    if ( ac instanceof OFActionOutput ) {
+//                                        port = U16.f(((OFActionOutput) ac).getPort());
+//                                    }
+//                                }
+//                                for ( OFAction action : ((OFFlowMod)msg).getActions()) {
+//                                    if ( action instanceof OFActionOutput ) {
+//                                        action = (OFActionOutput)action;
+//                                        xid = ((OFActionOutput) action).getPort();
+//                                    }
+//                                }
+//                                DetectionContent dc = new DetectionContent(((OFFlowMod)msg).getMatch(), thisISwitch.getId(), xid);
+//
+//                                System.out.println(" - - - SwitchHandler" + Thread.currentThread().getName() + " " + dc);// TODO: 闁哄鏅涘ú锕傚箮閿燂拷
+//                                Controller.dectionContents.add(dc);
+//                            }
+//                        }
+//                    }
                     if ( isMaster || !( msg instanceof OFFlowMod || msg instanceof OFPacketOut) ) {
                         msgReadWriteService.asyncSend(pmsg.msg);
                     }

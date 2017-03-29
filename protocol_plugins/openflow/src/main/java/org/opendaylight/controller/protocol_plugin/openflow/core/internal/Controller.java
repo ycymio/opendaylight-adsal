@@ -16,13 +16,11 @@ import java.nio.channels.SocketChannel;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,7 +30,6 @@ import org.opendaylight.controller.protocol_plugin.openflow.core.IController;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IMessageListener;
 import org.opendaylight.controller.protocol_plugin.openflow.core.ISwitch;
 import org.opendaylight.controller.protocol_plugin.openflow.core.ISwitchStateListener;
-import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionContent;
 import org.opendaylight.controller.sal.connection.ConnectionConstants;
 import org.opendaylight.controller.sal.connection.IPluginInConnectionService;
 import org.opendaylight.controller.sal.core.Node;
@@ -402,21 +399,21 @@ public class Controller implements IController, CommandProvider, IPluginInConnec
 //            }
 //        }
 //    }
-    protected static List<DetectionContent> dectionContents = new CopyOnWriteArrayList<DetectionContent>();
-
-    public void _listSendFM(CommandInterpreter ci) {
-        ci.println("  The Sending Detected Content test.");
-        List<DetectionContent> content = dectionContents;
-        if ( content == null || content.size() == 0  ) {
-            ci.println("\t the Detection Content is null");
-        }
-        else {
-            for( DetectionContent dc : content ) {
-                ci.println("\t " + dc);
-            }
-        }
-        ci.println("  The number of Sending Switch Detected Content is : " + content.size());
-    }
+//    protected static List<DetectionContent> dectionContents = new CopyOnWriteArrayList<DetectionContent>();
+//
+//    public void _listSendFM(CommandInterpreter ci) {
+//        ci.println("  The Sending Detected Content test.");
+//        List<DetectionContent> content = dectionContents;
+//        if ( content == null || content.size() == 0  ) {
+//            ci.println("\t the Detection Content is null");
+//        }
+//        else {
+//            for( DetectionContent dc : content ) {
+//                ci.println("\t " + dc);
+//            }
+//        }
+//        ci.println("  The number of Sending Switch Detected Content is : " + content.size());
+//    }
     /*******************************************************
      *               modified by ycy                       *
      *******************************************************/
