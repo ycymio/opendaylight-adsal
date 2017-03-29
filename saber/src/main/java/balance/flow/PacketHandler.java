@@ -87,8 +87,8 @@ public class PacketHandler implements IListenDataPacket {
 				packet_in_number++;
 				Integer tmp_burden = new Integer(burden.get(node) + 1);
 				burden.put(node, tmp_burden);
-
-				IPv4 ipv4Pkt = (IPv4) l3Pkt;
+ 
+			  	IPv4 ipv4Pkt = (IPv4) l3Pkt;
 				int dstAddr = ipv4Pkt.getDestinationAddress();
 				InetAddress addr = intToInetAddress(dstAddr);
 //				System.out.println("Pkt. to " + addr.toString()

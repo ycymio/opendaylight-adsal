@@ -54,7 +54,6 @@ public abstract class AbstractScheme {
 
     protected ConcurrentMap <InetAddress, Integer> myControllerBurden;
 
-
     protected AbstractScheme(IClusterGlobalServices clusterServices, ConnectionMgmtScheme type) {
         this.clusterServices = clusterServices;
         name = (type != null ? type.name() : "UNKNOWN");
