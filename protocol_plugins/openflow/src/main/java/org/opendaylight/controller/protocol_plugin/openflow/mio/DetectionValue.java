@@ -35,9 +35,9 @@ public class DetectionValue {
         if (getClass() != obj.getClass())
             return false;
         DetectionValue other = (DetectionValue) obj;
-        if (port != other.port)
-            return false;
-        if (switchID != other.switchID)
+//        if (this.port != other.port)
+//            return false;
+        if (this.switchID != other.switchID)
             return false;
         return true;
     }

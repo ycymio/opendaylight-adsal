@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 public class MessageReadWriteService implements IMessageReadWrite {
     private static final Logger logger = LoggerFactory
             .getLogger(MessageReadWriteService.class);
-    private static final int bufferSize = 1024 * 1024;
+    private static final int bufferSize = 1024 * 1024 * 2;
 
     private Selector selector;
     private SelectionKey clientSelectionKey;

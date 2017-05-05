@@ -24,6 +24,8 @@ import org.opendaylight.controller.protocol_plugin.openflow.IInventoryShimExtern
 import org.opendaylight.controller.protocol_plugin.openflow.core.IController;
 import org.opendaylight.controller.protocol_plugin.openflow.core.IMessageListener;
 import org.opendaylight.controller.protocol_plugin.openflow.core.ISwitch;
+import org.opendaylight.controller.protocol_plugin.openflow.core.internal.SwitchHandler;
+import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionDetail;
 import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionKey;
 import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionValue;
 import org.opendaylight.controller.sal.connection.IPluginOutConnectionService;
@@ -444,7 +446,6 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
                     || ((OFFlowRemoved) msg).getReason() == OFFlowRemovedReason.OFPRR_HARD_TIMEOUT_TEST
                     || ((OFFlowRemoved) msg).getReason() == OFFlowRemovedReason.OFPRR_IDLE_TIMEOUT ){
                 handleFlowRemovedMessage(sw, (OFFlowRemoved) msg);
-                System.out.println("OFFlowRemoved");
             }
             else {
                 handleFlowRemovedAddMessage(sw, (OFFlowRemoved)msg);
@@ -456,50 +457,36 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
 
 //    private static List<DetectionContent> dectionControllerContents = new ArrayList<DetectionContent>();
 //    private static List<DetectionContent> dectionSwitchContents = new ArrayList<DetectionContent>();
-    public static Map<DetectionKey, List<DetectionValue>> detectionSlaves = new HashMap<DetectionKey, List<DetectionValue>>();
-    public static Map<DetectionKey, List<DetectionValue>> detectionMaster = new HashMap<DetectionKey, List<DetectionValue>>();
-    public static Map<DetectionKey, List<DetectionValue>> detectionSwitch = new HashMap<DetectionKey, List<DetectionValue>>();
-
-    public static void setDectionSlaves(DetectionKey k, List<DetectionValue> v) {
-        System.out.println("here to set");
-        if ( detectionSlaves.containsKey(k) ) {
-            List<DetectionValue> l = detectionSlaves.get(k);
-            for( DetectionValue dv : v) {
-                l.add(dv);
-            }
-        }
-        else {
-            detectionSlaves.put(k, v);
-        }
-        k.getThread().start();
-    }
+    public static Map<DetectionKey, DetectionDetail> detectionAll = new ConcurrentHashMap<DetectionKey, DetectionDetail>();
+    public static int modeCode = 1;
 
     private void handleFlowRemovedAddMessage(ISwitch sw, OFFlowRemoved msg) {
+        DetectionDetail dd = null;
         OFMatch match = msg.getMatch();
-        if (( match.getWildcards() & OFMatch.OFPFW_DL_SRC) == 0) {
-            DetectionKey dc = new DetectionKey(match.getDataLayerSource(), match.getNetworkSource(), match.getNetworkDestination());
+        //System.out.println("match: " + match +  " \t port: " + match.getTransportSource());
+
+        if (( match.getWildcards() & OFMatch.OFPFW_TP_DST) == 0) {
+            DetectionKey dc = new DetectionKey(match.getTransportDestination(), match.getNetworkSource(), match.getNetworkDestination());
+            if( !detectionAll.containsKey(dc) ){
+                dd = new DetectionDetail(match.getTransportDestination(), match.getNetworkSource(), match.getNetworkDestination(),modeCode);
+//                System.out.println(dc.toString()+":dc mismatch in DKDD map");
+                detectionAll.put(dc, dd);
+//                return;
+            }
+            else{
+                dd = detectionAll.get(dc);
+            }
 //            if ( detectionSlaves.containsKey(dc) ) {
-                short port = match.getTransportSource(); // TODO: need to confirm
+                short port = match.getTransportSource(); // need to modify.
+                short flag = (short) ( msg.getXid()) ;
                 DetectionValue dv = new DetectionValue(sw.getId(), port);
-                if ( (msg.getXid() & 0x00010000) == 0) { // TODO: dectionMaster
-                    if ( detectionMaster.containsKey(dc) ) {
-                        detectionMaster.get(dc).add(dv);
-                    }
-                    else {
-                        List<DetectionValue> l = new ArrayList<DetectionValue>();
-                        l.add(dv);
-                        detectionMaster.put(dc, l);
-                    }
+                // xid = 0
+                if ( flag == 0) { // TODO: dectionMaster
+                   dd.addPktInfo(dv, 1);
                 }
-                else if ( (msg.getXid() & 0x00100000) == 0 ) { // TODO: dectionSwitch
-                    if ( detectionSwitch.containsKey(dc) ) {
-                        detectionSwitch.get(dc).add(dv);
-                    }
-                    else {
-                        List<DetectionValue> l = new ArrayList<DetectionValue>();
-                        l.add(dv);
-                        detectionSwitch.put(dc, l);
-                    }
+                else if ( flag == 1) { // TODO: dectionSwitch
+                   dd.addPktInfo(dv, 2);
+                   
                 }
 //            }
 //            else {
@@ -509,60 +496,94 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
         }
     }
 
-    public void _listSendFM(CommandInterpreter ci) {
-        ci.println("  The Sending Controller Detected Content is : ");
-        if ( detectionSlaves == null || detectionSlaves.size() == 0 ) {
-            ci.println("\t the Controller Detection Content is null");
-        }
-        else {
-            int size = 0;
-            for( DetectionKey dc : detectionSlaves.keySet() ) {
-                ci.println("\t " + dc);
-                for( DetectionValue dv: detectionSlaves.get(dc) ) {
-                    ci.println("\t \t" + dv);
-                    ++size;
-                }
-            }
-            ci.println("  The number of Receiving Controller Detected Content is : " + size);
-        }
+    public void _destoryda(CommandInterpreter ci) {
+        detectionAll.clear();
+        ci.println("detectionAll's size is" + detectionAll.size());
+    }
+    
+    public void _printCount(CommandInterpreter ci) {
+        ci.println("detectionAll's size is" + detectionAll.size());
+//        ci.println("packet_in's size is " + SwitchHandler.count.get());
     }
 
-    public void _listRecCFM(CommandInterpreter ci) {
-        ci.println("  The Receiving Controller Detected Content is : ");
-        if ( detectionMaster == null || detectionMaster.size() == 0 ) {
-            ci.println("\t the Controller Detection Content is null");
-        }
-        else {
-            int size = 0;
-            for( DetectionKey dc : detectionMaster.keySet() ) {
-                ci.println("\t " + dc);
-                for( DetectionValue dv: detectionMaster.get(dc) ) {
-                    ci.println("\t \t" + dv);
-                    ++size;
-                }
+    public void _printErrorTime(CommandInterpreter ci) {
+        List<DetectionDetail> list = new ArrayList<DetectionDetail>();
+        for( DetectionDetail detail: detectionAll.values() ) {
+            if ( detail.isErrorFlag() ) {
+                list.add(detail);
             }
-            ci.println("  The number of Receiving Controller Detected Content is : " + size);
         }
+        
+        for( DetectionDetail detail: list) {
+//          ci.println("\t " + detail ) ;
+            ci.print(detail.briefShow()+detail.getErrorTime());
+      }
+        
+        ci.println("first reflection:");
+        for( DetectionDetail detail: list) {
+            ci.print(detail.getErrorTimeFirst()+" ");
+        }
+        ci.println("\n second reflection:");
+        for( DetectionDetail detail: list) {
+          ci.print(detail.getErrorTimeSecond()+" ");
+      }
+        
+        ci.println("The size of detectionAll's error time is " + list.size());
     }
-
-    public void _listRecSFM(CommandInterpreter ci) {
-        ci.println("  The Receiving Switch Detected Content is : ");
-        if ( detectionSwitch == null || detectionSwitch.size() == 0 ) {
-            ci.println("\t the Switch Detection Content is null");
-            return;
-        }
-        else {
-            int size = 0;
-            for( DetectionKey dc : detectionSwitch.keySet() ) {
-                ci.println("\t " + dc);
-                for( DetectionValue dv: detectionSwitch.get(dc) ) {
-                    ci.println("\t \t" + dv);
-                    ++size;
-                }
-            }
-            ci.println("  The number of Receiving Switch Detected Content is : " + size);
-        }
-    }
+//    public void _listSendFM(CommandInterpreter ci) {
+//        ci.println("  The Sending Controller Detected Content is : ");
+//        if ( detectionSlaves == null || detectionSlaves.size() == 0 ) {
+//            ci.println("\t the Controller Detection Content is null");
+//        }
+//        else {
+//            int size = 0;
+//            for( DetectionKey dc : detectionSlaves.keySet() ) {
+//                ci.println("\t " + dc);
+//                for( DetectionValue dv: detectionSlaves.get(dc) ) {
+//                    ci.println("\t \t" + dv);
+//                    ++size;
+//                }
+//            }
+//            ci.println("  The number of Receiving Controller Detected Content is : " + size);
+//        }
+//    }
+//
+//    public void _listRecCFM(CommandInterpreter ci) {
+//        ci.println("  The Receiving Controller Detected Content is : ");
+//        if ( detectionMaster == null || detectionMaster.size() == 0 ) {
+//            ci.println("\t the Controller Detection Content is null");
+//        }
+//        else {
+//            int size = 0;
+//            for( DetectionKey dc : detectionMaster.keySet() ) {
+//                ci.println("\t " + dc);
+//                for( DetectionValue dv: detectionMaster.get(dc) ) {
+//                    ci.println("\t \t" + dv);
+//                    ++size;
+//                }
+//            }
+//            ci.println("  The number of Receiving Controller Detected Content is : " + size);
+//        }
+//    }
+//
+//    public void _listRecSFM(CommandInterpreter ci) {
+//        ci.println("  The Receiving Switch Detected Content is : ");
+//        if ( detectionSwitch == null || detectionSwitch.size() == 0 ) {
+//            ci.println("\t the Switch Detection Content is null");
+//            return;
+//        }
+//        else {
+//            int size = 0;
+//            for( DetectionKey dc : detectionSwitch.keySet() ) {
+//                ci.println("\t " + dc);
+//                for( DetectionValue dv: detectionSwitch.get(dc) ) {
+//                    ci.println("\t \t" + dv);
+//                    ++size;
+//                }
+//            }
+//            ci.println("  The number of Receiving Switch Detected Content is : " + size);
+//        }
+//    }
     /*******************************************************
      *              up modified by ycy                     *
      *******************************************************/

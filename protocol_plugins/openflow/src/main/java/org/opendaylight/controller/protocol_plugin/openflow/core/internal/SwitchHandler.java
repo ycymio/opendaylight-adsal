@@ -54,6 +54,7 @@ import org.openflow.protocol.OFPort;
 import org.openflow.protocol.OFPortStatus;
 import org.openflow.protocol.OFPortStatus.OFPortReason;
 import org.openflow.protocol.OFSetConfig;
+import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.OFType;
@@ -415,11 +416,14 @@ public class SwitchHandler implements ISwitch{
                 break;
             case PACKET_IN:
 //                logger.warn("PACKET_IN Message here");
+                // TODO: 
 //                try{
 //                    byte[] data = ((OFPacketIn)msg).getPacketData();
 //                    Ethernet res = new Ethernet();
 //                    res.deserialize(data, 0, data.length * NetUtils.NumBitsInAByte);
-//                    if( res.getPayload() instanceof IPv4){
+//                    if( res.getPayload().getPayload() instanceof UDP){
+//                        count.incrementAndGet();
+//                    }
 //                        synchronized(SwitchHandler.class){
 //                            inTime.add(System.currentTimeMillis());
 //                        }
@@ -431,9 +435,9 @@ public class SwitchHandler implements ISwitch{
 //                    logger.warn("Failed to decode packet: {}", e.getMessage());
 //                }
                 break;
-            case FLOW_REMOVED:
+//            case FLOW_REMOVED:
 //                logger.warn("Flow removed Message here");
-                break;
+//                break;
             default:
                 break;
             } // end of switch
@@ -512,7 +516,7 @@ public class SwitchHandler implements ISwitch{
                     (isOperational() ? HexString.toHexString(sid) : "unknown"));
             return;
         }
-        logger.error("Caught exception: ", e); // TODO: debug -闂侀潧妫撮幏锟� error
+        logger.error("Caught exception: ", e); // TODO: debug
 
         // notify core of this error event and disconnect the switch
         ((Controller) core).takeSwitchEventError(this);
@@ -841,8 +845,9 @@ public class SwitchHandler implements ISwitch{
      *               modified by ycy                       *
      *******************************************************/
     // TODO:
-    protected static Map<Long, List<OFPacketOut>> packetOut = new ConcurrentHashMap<Long, List<OFPacketOut>>();
+//    protected static Map<Long, List<OFPacketOut>> packetOut = new ConcurrentHashMap<Long, List<OFPacketOut>>();
     private boolean isMaster = true;
+//    public static AtomicInteger count = new AtomicInteger(0);
 
     /*
      * Transmit thread polls the message out of the priority queue and invokes
@@ -858,16 +863,19 @@ public class SwitchHandler implements ISwitch{
                     OFMessage msg = pmsg.getMsg();
 //                    if ( msg instanceof OFFlowMod || msg instanceof OFPacketOut) {
 //                        if( msg instanceof OFPacketOut ) {
-//                            Long id = getId();
-//                            if ( packetOut.containsKey(id)) {
-//                                List<OFPacketOut> list = packetOut.get(id);
-//                                list.add((OFPacketOut) msg);
-//                                packetOut.put(id, list);
+//                            try{
+//                              byte[] data = ((OFPacketOut) msg).getPacketData();
+//                              Ethernet res = new Ethernet();
+//                              res.deserialize(data, 0, data.length * NetUtils.NumBitsInAByte);
+//                              if (res.getPayload().getPayload() instanceof ICMP) {
+//                                  msgReadWriteService.asyncSend(pmsg.msg);
+//                                  if (pmsg.syncReply) {
+//                                      syncMessageInternal(pmsg.msg, pmsg.msg.getXid(), false);
+//                                  }
+//                              }
 //                            }
-//                            else {
-//                                List<OFPacketOut> list = new ArrayList<OFPacketOut>();
-//                                list.add((OFPacketOut) msg);
-//                                packetOut.put(id, list);
+//                            catch (Exception e) {
+//                                logger.warn("Failed to decode packet: {}", e.getMessage());
 //                            }
 //                        }
 //                        else {
@@ -894,7 +902,7 @@ public class SwitchHandler implements ISwitch{
 //                            }
 //                        }
 //                    }
-                    if ( isMaster || !( msg instanceof OFFlowMod || msg instanceof OFPacketOut) ) {
+                    if ( isMaster || !( msg instanceof OFFlowMod) ) {
                         msgReadWriteService.asyncSend(pmsg.msg);
                     }
 //                    if( msg instanceof OFPacketOut){
@@ -925,7 +933,7 @@ public class SwitchHandler implements ISwitch{
                     /*
                      * If syncReply is set to true, wait for the response back.
                      */
-                    if ( isMaster || !( msg instanceof OFFlowMod || msg instanceof OFPacketOut) ) {
+                    if ( isMaster || !( msg instanceof OFFlowMod) ) {
                         if (pmsg.syncReply) {
                             syncMessageInternal(pmsg.msg, pmsg.msg.getXid(), false);
                         }

@@ -34,7 +34,9 @@
       <version>1.0.5-SNAPSHOT</version>
     </dependency>
   </dependencies>
-
+  <properties>
+    <checkstyle.skip>true</checkstyle.skip>
+  </properties>
   <build>
     <plugins>
       <plugin>
