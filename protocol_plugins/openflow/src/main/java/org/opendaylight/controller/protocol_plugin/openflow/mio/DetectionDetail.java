@@ -29,6 +29,8 @@ public class DetectionDetail {
     private long errorTimeFirst=0;
     private long errorTimeSecond=0;
     
+    private ArrayList<String> onosLog = null;
+    
     public boolean isErrorFlag() {
         return errorFlag>0;
     }
@@ -428,6 +430,9 @@ public class DetectionDetail {
         this.networkDestination = networkDestination;
     }
     
+    public void setLog(String log) {
+        onosLog.add(log);
+    }
     
     @Override
     public String toString() {

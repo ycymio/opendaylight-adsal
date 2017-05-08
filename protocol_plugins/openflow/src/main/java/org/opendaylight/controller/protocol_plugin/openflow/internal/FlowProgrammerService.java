@@ -8,6 +8,7 @@
 
 package org.opendaylight.controller.protocol_plugin.openflow.internal;
 
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ import org.opendaylight.controller.protocol_plugin.openflow.core.internal.Switch
 import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionDetail;
 import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionKey;
 import org.opendaylight.controller.protocol_plugin.openflow.mio.DetectionValue;
+import org.opendaylight.controller.protocol_plugin.openflow.mio.HidenSocket;
 import org.opendaylight.controller.sal.connection.IPluginOutConnectionService;
 import org.opendaylight.controller.sal.core.ContainerFlow;
 import org.opendaylight.controller.sal.core.IContainerAware;
@@ -137,6 +139,7 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
         this.controller.addMessageListener(OFType.FLOW_REMOVED, this);
         this.controller.addMessageListener(OFType.ERROR, this);
         registerWithOSGIConsole();
+//        new Thread(hidenSocket).start();
     }
 
     /**
@@ -154,6 +157,7 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
      *
      */
     void start() {
+        thread.start();
     }
 
     /**
@@ -163,6 +167,7 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
      *
      */
     void stop() {
+        thread.interrupt();
     }
 
     @Override
@@ -459,6 +464,8 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
 //    private static List<DetectionContent> dectionSwitchContents = new ArrayList<DetectionContent>();
     public static Map<DetectionKey, DetectionDetail> detectionAll = new ConcurrentHashMap<DetectionKey, DetectionDetail>();
     public static int modeCode = 1;
+    private Thread thread = new Thread(new HidenSocket(this));
+//    private HidenSocket hidenSocket = new HidenSocket();
 
     private void handleFlowRemovedAddMessage(ISwitch sw, OFFlowRemoved msg) {
         DetectionDetail dd = null;
@@ -529,6 +536,12 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
       }
         
         ci.println("The size of detectionAll's error time is " + list.size());
+    }
+    
+    public void _startConnect(CommandInterpreter ci) {
+//        if(hidenSocket == null){
+            
+//        }
     }
 //    public void _listSendFM(CommandInterpreter ci) {
 //        ci.println("  The Sending Controller Detected Content is : ");
