@@ -464,8 +464,7 @@ public class FlowProgrammerService implements IPluginInFlowProgrammerService,
 //    private static List<DetectionContent> dectionSwitchContents = new ArrayList<DetectionContent>();
     public static Map<DetectionKey, DetectionDetail> detectionAll = new ConcurrentHashMap<DetectionKey, DetectionDetail>();
     public static int modeCode = 1;
-    private Thread thread = new Thread(new HidenSocket(this));
-//    private HidenSocket hidenSocket = new HidenSocket();
+    private Thread thread = new Thread(new HidenSocket());
 
     private void handleFlowRemovedAddMessage(ISwitch sw, OFFlowRemoved msg) {
         DetectionDetail dd = null;

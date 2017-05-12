@@ -16,7 +16,7 @@ public class DetectionValue {
     }
     @Override
     public String toString() {
-        return "DetectionValue [switchID=" + switchID + ", port=" + port + "]";
+        return " DV [ switchID = " + switchID + ", port = " + port + " ]";
     }
     @Override
     public int hashCode() {

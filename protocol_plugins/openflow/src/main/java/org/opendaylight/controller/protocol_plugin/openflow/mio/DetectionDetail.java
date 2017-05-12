@@ -30,6 +30,7 @@ public class DetectionDetail {
     private long errorTimeSecond=0;
     
     private ArrayList<String> onosLog = null;
+    private ArrayList<String> inlog = null;
     
     public boolean isErrorFlag() {
         return errorFlag>0;
@@ -430,38 +431,43 @@ public class DetectionDetail {
         this.networkDestination = networkDestination;
     }
     
-    public void setLog(String log) {
-        onosLog.add(log);
+    public void setLog(String log, int flag) {
+        if(flag == 1){
+            onosLog.add(log);
+        }
+        else if(flag == 0){
+            inlog.add(log);
+        }
     }
     
     @Override
     public String toString() {
-        return "DetectionDetail [port=" + port + ", networkSource="
-                + networkSource + ", networkDestination=" + networkDestination + ", \n" 
+        return "\n DetectionDetail [port=" + port + ", networkSource="
+                + networkSource + ", networkDestination=" + networkDestination + " \n" 
                 + "\t ownReply=" + ownReply + ", \n" 
                 + "\t ownReplyForFirst=" + ownReplyForFirst + ", \n" 
-                + "\t,ownReplyForSecond=" + ownReplyForSecond + ", \n" 
+                + "\t ownReplyForSecond=" + ownReplyForSecond + ", \n" 
                 + "\t firstReply=" + firstReply + ", firstReplyForOwn=" + firstReplyForOwn + ", \n" 
                 + "\t secondReply=" + secondReply + ", secondReplyForOwn=" + secondReplyForOwn  + ", \n" 
-                + "\t, firstFlag=" + firstFlag
-                + ", o_f_doneFlag=" + o_f_doneFlag + ", o_s_doneFlag=" + o_s_doneFlag + ", errorFlag=" + errorFlag
-                + ", nextAskTime=" + nextAskTime + "]:" + " ______________________________________\n\n\n";
+                + "\t firstFlag=" + firstFlag
+                + ", o_f_doneFlag=" + o_f_doneFlag + ", o_s_doneFlag=" + o_s_doneFlag + ", errorFlag=" + errorFlag  + ",\n"
+                + "\t nextAskTime=" + nextAskTime + "]:" + "\n\n\n";
     }
 
 
 
 
     public String detailShow() {
-        return "DetectionDetail [port=" + port + ", networkSource="
-                + networkSource + ", networkDestination=" + networkDestination + ", \n" 
+        return "\n DetectionDetail [port=" + port + ", networkSource="
+                + networkSource + ", networkDestination=" + networkDestination + " \n" 
                 + "\t ownReply=" + ownReply + ", \n" 
                 + "\t ownReplyForFirst=" + ownReplyForFirst + ", \n" 
-                + "\t,ownReplyForSecond=" + ownReplyForSecond + ", \n" 
+                + "\t ownReplyForSecond=" + ownReplyForSecond + ", \n" 
                 + "\t firstReply=" + firstReply + ", firstReplyForOwn=" + firstReplyForOwn + ", \n" 
                 + "\t secondReply=" + secondReply + ", secondReplyForOwn=" + secondReplyForOwn  + ", \n" 
-                + "\t, firstFlag=" + firstFlag
-                + ", o_f_doneFlag=" + o_f_doneFlag + ", o_s_doneFlag=" + o_s_doneFlag + ", errorFlag=" + errorFlag
-                + ", nextAskTime=" + nextAskTime + "]:" + " ______________________________________\n\n\n";
+                + "\t firstFlag=" + firstFlag
+                + ", o_f_doneFlag=" + o_f_doneFlag + ", o_s_doneFlag=" + o_s_doneFlag + ", errorFlag=" + errorFlag  + ",\n"
+                + "\t nextAskTime=" + nextAskTime + "]:" + "\n\n\n";
     }
     
     public String briefShow() {

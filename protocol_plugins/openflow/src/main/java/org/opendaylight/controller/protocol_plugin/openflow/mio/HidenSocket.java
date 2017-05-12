@@ -26,14 +26,22 @@ public class HidenSocket implements Runnable{
     public boolean tryToLog(String read) {
         boolean flag = false;
         String[] tupleString = read.split(" ");
-        short port = new Short(tupleString[0]);
-        int saddr = new Integer(tupleString[1]);
-        int daddr = new Integer(tupleString[2]);
+        short port = Short.valueOf(tupleString[0]);
+        int saddr = Integer.valueOf(tupleString[1]);
+        int daddr = Integer.valueOf(tupleString[2]);
+        int requestType = Integer.valueOf(tupleString[3]);
         DetectionKey dk = new DetectionKey(port, saddr, daddr);
         if(FlowProgrammerService.detectionAll.containsKey(dk)){
             DetectionDetail dd = FlowProgrammerService.detectionAll.get(dk);
-            dd.setLog(tupleString[3]);
+            dd.setLog(tupleString[4],requestType);
             flag = true; 
+        }
+        else{
+//            if(requestType == 0){
+                DetectionDetail dd = new DetectionDetail(port, saddr, daddr,FlowProgrammerService.modeCode);
+                FlowProgrammerService.detectionAll.put(dk, dd);
+                dd.setLog(tupleString[4],requestType);
+//            }
         }
         return flag;
     }
@@ -56,14 +64,17 @@ public class HidenSocket implements Runnable{
                 File file=new File(path);
                 if(!file.exists())
                     file.createNewFile();
+                
 
-                out = new FileOutputStream(file,false); //如果追加方式用true        
+                out = new FileOutputStream(file,false); //如果追加方式用true
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 String read = in.readLine();
                 while(true){
-                    System.out.println("Client:"+read);
-                    
+                    System.out.println("\t Client:"+read);
+//                    tryToLog(read);
+                    read = read + "\n";
                     out.write(read.getBytes("utf-8"));//注意需要转换对应的字符集
+
                     read = in.readLine();
                 }
             } catch (IOException e) {

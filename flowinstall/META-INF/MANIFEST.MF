@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1493896835068
+Bnd-LastModified: 1494387416545
 Build-Jdk: 1.7.0_80
 Built-By: odl_01
 Bundle-Activator: my.flowinstall.Activator

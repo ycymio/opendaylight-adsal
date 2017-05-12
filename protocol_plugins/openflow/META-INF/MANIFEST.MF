@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1493887500726
+Bnd-LastModified: 1494215709517
 Build-Jdk: 1.7.0_80
 Built-By: odl_01
 Bundle-Activator: org.opendaylight.controller.protocol_plugin.openflow.i
@@ -24,7 +24,8 @@ Export-Package: org.opendaylight.controller.protocol_plugin.openflow.int
  ntory,org.opendaylight.controller.sal.packet,org.opendaylight.controlle
  r.sal.reader,org.opendaylight.controller.sal.topology,org.opendaylight.
  controller.sal.utils,org.slf4j";version="0.4.4.SNAPSHOT",org.opendaylig
- ht.controller.protocol_plugin.openflow.mio;version="0.4.4.SNAPSHOT"
+ ht.controller.protocol_plugin.openflow.mio;uses:="org.opendaylight.cont
+ roller.protocol_plugin.openflow.internal";version="0.4.4.SNAPSHOT"
 Import-Package: org.opendaylight.controller.sal.packet;version="[0.8,1)"
  ,org.opendaylight.controller.sal.action;version="[0.8,1)",org.opendayli
  ght.controller.sal.discovery;version="[0.8,1)",org.opendaylight.control

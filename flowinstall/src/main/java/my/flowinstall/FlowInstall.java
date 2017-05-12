@@ -306,7 +306,7 @@ public class FlowInstall implements ITopologyManagerAware, IListenDataPacket, Co
         if (inPkt == null) {
             return PacketResult.IGNORED;
         }
-        NodeConnector incoming_connector = inPkt.getIncomingNodeConnector();
+//        NodeConnector incoming_connector = inPkt.getIncomingNodeConnector();
 
         Packet fmtPkt = this.dataPacketService.decodeDataPacket(inPkt);
         
@@ -318,7 +318,7 @@ public class FlowInstall implements ITopologyManagerAware, IListenDataPacket, Co
             
             int srip = ipv4.getSourceAddress(), dvip = ipv4.getDestinationAddress();
             InetAddress dIP = NetUtils.getInetAddress(dvip);
-            InetAddress sIP = NetUtils.getInetAddress(srip);
+//            InetAddress sIP = NetUtils.getInetAddress(srip);
             
             if (dIP == null) {
                 return PacketResult.IGNORED;
@@ -371,8 +371,8 @@ public class FlowInstall implements ITopologyManagerAware, IListenDataPacket, Co
 //                e.printStackTrace();
 //            }
 
-            Node snode = Node.fromString(Node.NodeIDType.OPENFLOW, "1");
-            Node dnode = Node.fromString(Node.NodeIDType.OPENFLOW, "4");
+            Node snode = Node.fromString(Node.NodeIDType.OPENFLOW, "d");
+            Node dnode = Node.fromString(Node.NodeIDType.OPENFLOW, "11");
 
 //            Node snode = incoming_connector.getNode(), 
 //                dnode = host.getnodeconnectorNode();
