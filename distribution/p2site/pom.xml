@@ -432,6 +432,11 @@
                   <transitive>false</transitive>
                   <override>false</override>
                 </artfiact>
+                <artfiact>
+                  <id>com.springsource.org.hyperic.sigar:1.6.3</id>
+                  <transitive>false</transitive>
+                  <override>false</override>
+                </artfiact>
               </artifacts>
             </configuration>
           </execution>
