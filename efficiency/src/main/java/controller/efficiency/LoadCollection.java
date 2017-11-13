@@ -38,7 +38,6 @@ import org.opendaylight.controller.sal.core.Path;
 import org.opendaylight.controller.sal.core.Property;
 import org.opendaylight.controller.sal.core.UpdateType;
 import org.opendaylight.controller.sal.flowprogrammer.Flow;
-import org.opendaylight.controller.sal.flowprogrammer.IFlowProgrammerService;
 import org.opendaylight.controller.sal.match.Match;
 import org.opendaylight.controller.sal.match.MatchField;
 import org.opendaylight.controller.sal.match.MatchType;
@@ -53,8 +52,6 @@ import org.opendaylight.controller.sal.topology.TopoEdgeUpdate;
 import org.opendaylight.controller.sal.utils.EtherTypes;
 import org.opendaylight.controller.sal.utils.NetUtils;
 import org.opendaylight.controller.sal.utils.Status;
-import org.opendaylight.controller.statisticsmanager.IStatisticsManager;
-import org.opendaylight.controller.switchmanager.ISwitchManager;
 import org.opendaylight.controller.topologymanager.ITopologyManager;
 import org.opendaylight.controller.topologymanager.ITopologyManagerAware;
 import org.osgi.framework.BundleContext;
@@ -67,22 +64,26 @@ import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.SparseMultigraph;
 import edu.uci.ics.jung.graph.util.EdgeType;
 
+/***
+ * Rewrite the function of flow install and calculate the load balance.
+ * @author ngnt-ycy
+ *
+ */
 public class LoadCollection implements CommandProvider, ITopologyManagerAware, IListenDataPacket {
 
     private static Logger log = LoggerFactory.getLogger(LoadCollection.class);
     
-    private IStatisticsManager statisticsManager = null;
-    private ITopologyManager topologyManager;
+    private ITopologyManager topologyManager = null;
     private IDataPacketService dataPacketService = null;
-    private IFlowProgrammerService programmer = null;
-    private ISwitchManager switchManager = null;
     private IForwardingRulesManager forwarder = null;
     private IConnectionManager connectionManager = null;
-    private IfIptoHost hostTracker;
-    // topology graph
+    private IfIptoHost hostTracker = null;
     private Graph<Node, Edge> topo;
-    // short path graph
     private DijkstraShortestPath<Node, Edge> shortPath;
+    
+//  private IStatisticsManager statisticsManager = null;
+//  private IFlowProgrammerService programmer = null;
+//  private ISwitchManager switchManager = null;
 
     // int tranform net address
     static private InetAddress intToInetAddress(int i) {
@@ -138,7 +139,7 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
                     flow, node, status.getDescription());
             return false;
         } else {
-            System.out.println(flow);
+            log.trace(flow.toString());
             return true;
         }
     }
@@ -190,10 +191,8 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
             }
 
             HostNodeConnector host = hostTracker.hostFind(dIP);
-//            System.out.println("hostTracker:"+host);
 
             Node snode = incoming_connector.getNode(), dnode = host.getnodeconnectorNode();
-           //Match smatch = fmtPkt.getMatch().clone();
             
             Match smatch = new Match();
             smatch.setField(new MatchField(MatchType.DL_TYPE, EtherTypes.IPv4.shortValue()));
@@ -246,7 +245,7 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
             this.dataPacketService.transmitDataPacket(rp);
 
       	    long endTime=System.nanoTime();
-      	    log.trace("receiveDataPacket Process Time: {} ns", endTime-startTime);
+      	    log.info("[receiveDataPacket] Process Time: {} ns", endTime-startTime);
 
             return PacketResult.KEEP_PROCESSING;
         }
@@ -302,7 +301,6 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
             }
             break;
         }
-        log.debug("shortPath reset");
         shortPath.reset(); // something wrong? just reset?
 
         return edgePresentInGraph;
@@ -315,7 +313,7 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
         // props, local });
 
         if ((e == null) || (type == null)) {
-            System.out.print("Edge or Update type are null!");
+            log.warn("Edge or Update type are null!");
             return false;
         }
         String srcType = e.getTailNodeConnector().getType();
@@ -359,18 +357,6 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
         }
     }
 
-    public void setStatisticsManager(IStatisticsManager s) {
-        log.debug("StatisticsManager set");
-        this.statisticsManager = s;
-    }
-
-    public void unsetStatisticsManager(IStatisticsManager s) {
-        if (this.statisticsManager == s) {
-            log.debug("StatisticsManager removed!");
-            this.statisticsManager = null;
-        }
-    }
-
     public void setDataPacketService(IDataPacketService s) {
         log.trace("Set DataPacketService.");
         this.dataPacketService = s;
@@ -394,32 +380,6 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
         }
     }
 
-    public void setFlowProgrammerService(IFlowProgrammerService s) {
-        log.trace("Set FlowProgrammerService.");
-
-        this.programmer = s;
-    }
-
-    public void unsetFlowProgrammerService(IFlowProgrammerService s) {
-        log.trace("Removed FlowProgrammerService.");
-
-        if (this.programmer == s) {
-            this.programmer = null;
-        }
-    }
-    
-    public void setSwitchManager(ISwitchManager s) {
-        log.trace("Set SwitchManager.");
-        this.switchManager = s;
-    }
-
-    public void unsetSwitchManager(ISwitchManager s) {
-        log.trace("Removed SwitchManager.");
-        if (this.switchManager == s) {
-             this.switchManager = null;
-        }
-    }
-
     public void setForwarder(IForwardingRulesManager s) {
         this.forwarder = s;
     }
@@ -431,16 +391,55 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
     }
 
     public void setHostTracker(IfIptoHost hostTracker) {
-        log.debug("Setting HostTracker");
+        log.trace("Setting HostTracker");
         this.hostTracker = hostTracker;
     }
 
     public void unsetHostTracker(IfIptoHost s) {
-        log.debug("UNSetting HostTracker");
+        log.trace("UNSetting HostTracker");
         if (this.hostTracker == s) {
             this.hostTracker = null;
         }
     }
+    
+//    public void setStatisticsManager(IStatisticsManager s) {
+//        log.debug("StatisticsManager set");
+//        this.statisticsManager = s;
+//    }
+//
+//    public void unsetStatisticsManager(IStatisticsManager s) {
+//        if (this.statisticsManager == s) {
+//            log.debug("StatisticsManager removed!");
+//            this.statisticsManager = null;
+//        }
+//    }
+//
+//    public void setFlowProgrammerService(IFlowProgrammerService s) {
+//        log.trace("Set FlowProgrammerService.");
+//
+//        this.programmer = s;
+//    }
+//
+//    public void unsetFlowProgrammerService(IFlowProgrammerService s) {
+//        log.trace("Removed FlowProgrammerService.");
+//
+//        if (this.programmer == s) {
+//            this.programmer = null;
+//        }
+//    }
+//    
+//    public void setSwitchManager(ISwitchManager s) {
+//        log.trace("Set SwitchManager.");
+//        this.switchManager = s;
+//    }
+//
+//    public void unsetSwitchManager(ISwitchManager s) {
+//        log.trace("Removed SwitchManager.");
+//        if (this.switchManager == s) {
+//             this.switchManager = null;
+//        }
+//    }
+
 
     public String getHelp() {
         StringBuffer help = new StringBuffer();

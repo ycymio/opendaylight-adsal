@@ -8,11 +8,8 @@ import org.opendaylight.controller.connectionmanager.IConnectionManager;
 import org.opendaylight.controller.forwardingrulesmanager.IForwardingRulesManager;
 import org.opendaylight.controller.hosttracker.IfIptoHost;
 import org.opendaylight.controller.sal.core.ComponentActivatorAbstractBase;
-import org.opendaylight.controller.sal.flowprogrammer.IFlowProgrammerService;
 import org.opendaylight.controller.sal.packet.IDataPacketService;
 import org.opendaylight.controller.sal.packet.IListenDataPacket;
-import org.opendaylight.controller.statisticsmanager.IStatisticsManager;
-import org.opendaylight.controller.switchmanager.ISwitchManager;
 import org.opendaylight.controller.topologymanager.ITopologyManager;
 import org.opendaylight.controller.topologymanager.ITopologyManagerAware;
 
@@ -36,25 +33,11 @@ public class Activator extends ComponentActivatorAbstractBase {
 
              c.add(createServiceDependency().setService(IConnectionManager.class)
                      .setCallbacks("setIConnectionManager", "unsetIConnectionManager").setRequired(false));
-            //statistics service
-            c.add(createContainerServiceDependency(containerName).setService(
-                    IStatisticsManager.class).setCallbacks(
-                    "setStatisticsManager", "unsetStatisticsManager")
-                    .setRequired(false));
-            //flowprogrammer service
-            c.add(createContainerServiceDependency(containerName).setService(
-                    IFlowProgrammerService.class).setCallbacks("setFlowProgrammerService",
-                    "unsetFlowProgrammerService").setRequired(true));
            //topology service
             c.add(createContainerServiceDependency(containerName).setService(
                     ITopologyManager.class).setCallbacks(
                     "setTopologyManager", "unsetTopologyManager")
                     .setRequired(true));
-            //switch service
-            c.add(createContainerServiceDependency(containerName).setService(
-                    ISwitchManager.class).setCallbacks(
-                    "setSwitchManager", "unsetSwitchManager")
-                    .setRequired(false));
             c.add(createContainerServiceDependency(containerName).setService(IfIptoHost.class)
                     .setCallbacks("setHostTracker", "unsetHostTracker").setRequired(true));
             c.add(createContainerServiceDependency(containerName).setService(
@@ -64,7 +47,21 @@ public class Activator extends ComponentActivatorAbstractBase {
             c.add(createContainerServiceDependency(containerName)
                     .setService(IForwardingRulesManager.class).setCallbacks("setForwarder", "unsetForwarder")
                     .setRequired(true));
-            
+
+            //statistics service
+//            c.add(createContainerServiceDependency(containerName).setService(
+//                    IStatisticsManager.class).setCallbacks(
+//                    "setStatisticsManager", "unsetStatisticsManager")
+//                    .setRequired(false));
+            //flowprogrammer service
+//            c.add(createContainerServiceDependency(containerName).setService(
+//                    IFlowProgrammerService.class).setCallbacks("setFlowProgrammerService",
+//                    "unsetFlowProgrammerService").setRequired(true));
+            //switch service
+//          c.add(createContainerServiceDependency(containerName).setService(
+//                  ISwitchManager.class).setCallbacks(
+//                  "setSwitchManager", "unsetSwitchManager")
+//                  .setRequired(false));
         }
     }
 
