@@ -41,6 +41,7 @@ import org.opendaylight.controller.clustering.services.IClusterGlobalServices;
 import org.opendaylight.controller.clustering.services.IClusterServices;
 import org.opendaylight.controller.connectionmanager.ConnectionMgmtScheme;
 import org.opendaylight.controller.connectionmanager.loadbalanced.ControllerState;
+import org.opendaylight.controller.connectionmanager.loadbalanced.ControllerStateInCluster;
 import org.opendaylight.controller.sal.core.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,16 +57,27 @@ public class LoadBalancedScheme extends AbstractScheme {
 	private static final Logger log = LoggerFactory.getLogger(LoadBalancedScheme.class);
 	
 	// some configurations of scheduled task.
-	private static final int INTERNAL_THREAD_START_TIME = 60;
+	private static final int INTERNAL_THREAD_START_TIME = 120;
 	private static final int CONTROLLER_STATE_UPDATE_INTERVAL = 60;
+	private static final int CONTROLLER_STATE_CHECK_INTERVAL = 60;
+	private static final int MIGRATION_INTERVAL = 120;
 	private static final int STATE_HISTORY_SIZE = 10;
+	
+	private static ControllerState stardard = null;
+	private static int packetin_lower_limit = 1;
 	
 	private static ScheduledExecutorService scheduledService = null;
 	private static ExecutorService updateInClusterService = null;
     private static AbstractScheme myScheme= null;
-    private final String controllerStateCacheName;
     private LinkedList<ControllerState> stateHistory;
-    protected static ConcurrentMap<InetAddress, ControllerState> controllerState;
+    private static long maxPacketIns = 500L;
+    
+    private final String controllerStateCacheName;
+    protected static ConcurrentMap<InetAddress, ControllerStateInCluster> controllerState;
+    private final String migrationLockName;
+    protected static ConcurrentMap<Integer, InetAddress> migrationLock;
+    private ControllerState determinedState = null;
+    
 
     public static AbstractScheme getScheme(IClusterGlobalServices clusterServices) {
         if (myScheme == null) {
@@ -77,6 +89,7 @@ public class LoadBalancedScheme extends AbstractScheme {
     protected LoadBalancedScheme(IClusterGlobalServices clusterServices) {
         super(clusterServices, ConnectionMgmtScheme.LOAD_BALANCED);
         controllerStateCacheName = "connectionmanager.load_balanced.controllerstate";
+        migrationLockName = "connectionmanager.load_balanced.migrationlock";
         // some cache operations here
         if ( clusterServices != null ) {
         	allocateCachesInLB();
@@ -86,7 +99,15 @@ public class LoadBalancedScheme extends AbstractScheme {
             		long startTime = System.nanoTime();
             		updateControllerStateInCluster();
             		long endTime = System.nanoTime();
-            		log.info("[update controller state] Process Time:"+(endTime-startTime)+"ns");
+            		log.debug("[update controller state] Process Time:"+(endTime-startTime)+"ns");
+            	}
+            };
+            Runnable checkRunnable = new Runnable() {
+            	public void run() {
+            		long startTime = System.nanoTime();
+            		checkControllerState();
+            		long endTime = System.nanoTime();
+            		log.debug("[check controller state] Process Time:"+(endTime-startTime)+"ns");
             	}
             };
             updateInClusterService = Executors.newSingleThreadExecutor();
@@ -100,13 +121,17 @@ public class LoadBalancedScheme extends AbstractScheme {
                 		updateInClusterService.execute(updateRunnable);
                 	}
               	    long endTime=System.nanoTime();
-              	    log.info("[collect controller state] Process Time:"+(endTime-startTime)+"ns");
+              	    log.debug("[collect controller state] Process Time:"+(endTime-startTime)+"ns");
                 }  
             };  
-            scheduledService = Executors.newSingleThreadScheduledExecutor(); 
+            scheduledService = Executors.newScheduledThreadPool(2); 
             scheduledService.scheduleAtFixedRate(collectRunnable, INTERNAL_THREAD_START_TIME, CONTROLLER_STATE_UPDATE_INTERVAL, TimeUnit.SECONDS);  
+//            scheduledServiceForCheck = Executors.newSingleThreadScheduledExecutor();
+            scheduledService.scheduleAtFixedRate(checkRunnable, INTERNAL_THREAD_START_TIME, CONTROLLER_STATE_CHECK_INTERVAL, TimeUnit.SECONDS);
             stateHistory = new LinkedList<ControllerState>();
             
+            // TODO: stardard. can modify.
+            stardard = new ControllerState(0.1d, 100L << 20, 1, 0, 600*1000000L, null);
         }
     }
     
@@ -118,8 +143,9 @@ public class LoadBalancedScheme extends AbstractScheme {
         }
         try {
             clusterServices.createCache(controllerStateCacheName, EnumSet.of(IClusterServices.cacheMode.TRANSACTIONAL));
+            clusterServices.createCache(migrationLockName, EnumSet.of(IClusterServices.cacheMode.TRANSACTIONAL));
         } catch (CacheExistException cee) {
-            log.debug("\nCache already exists: {}", controllerStateCacheName);
+            log.debug("\nCache already exists: {} || {}", controllerStateCacheName, migrationLockName);
         } catch (CacheConfigException cce) {
             log.error("\nCache configuration invalid - check cache mode");
         } catch (Exception e) {
@@ -130,10 +156,11 @@ public class LoadBalancedScheme extends AbstractScheme {
     @SuppressWarnings({ "unchecked" })
     private void retrieveCachesInLB() {
         if (this.clusterServices == null) {
-            log.error("Un-initialized Cluster Services, can't retrieve caches for scheme: load_balance");
+            log.error("Un-initialized Cluster Services, can't retrieve caches for scheme: load_balance.");
             return;
         }
-        controllerState = (ConcurrentMap<InetAddress, ControllerState>) clusterServices.getCache(controllerStateCacheName);
+        controllerState = (ConcurrentMap<InetAddress, ControllerStateInCluster>) clusterServices.getCache(controllerStateCacheName);
+        migrationLock = (ConcurrentMap<Integer, InetAddress>) clusterServices.getCache(migrationLockName);
         if (nodeConnections == null) {
             log.error("\nFailed to get cache: {}", controllerStateCacheName);
         }
@@ -206,7 +233,7 @@ public class LoadBalancedScheme extends AbstractScheme {
                  else {
                 	 if (nodeConnections.putIfAbsent(node, newControllers) != null) {
                 		 clusterServices.trollback();
-     					 log.debug("Retrying ... {} with {}",
+     					 log.trace("Retrying ... {} with {}",
     							controller.getHostAddress(), node.toString());
                 		 try {
                 			 Thread.sleep(100);
@@ -214,7 +241,7 @@ public class LoadBalancedScheme extends AbstractScheme {
                 		 return updateNodeWithoutConstraint(node, controller);
                 	 }
                 	 else {
-         				log.info("Added {} to {}", controller.getHostAddress(), node.toString());
+         				log.trace("Added {} to {}", controller.getHostAddress(), node.toString());
                 	 }
                  }
                  clusterServices.tcommit();
@@ -235,6 +262,7 @@ public class LoadBalancedScheme extends AbstractScheme {
     	scheduledService.shutdown();
     }
     
+    // TODO: load balance in the beginning.
     @Override
     public boolean isConnectionAllowedInternal(Node node) {
         Set <InetAddress> controllers = nodeConnections.get(node);
@@ -277,7 +305,7 @@ public class LoadBalancedScheme extends AbstractScheme {
                 NetInterfaceConfig ifconfig = sigar.getNetInterfaceConfig(name); 
 //                System.out.println("IP Address: \t" + ifconfig.getAddress()); 
                 if ((ifconfig.getFlags() & 1L) <= 0L) { 
-                    log.info("!IFF_UP...skipping getNetInterfaceStat"); 
+                    log.debug("!IFF_UP...skipping getNetInterfaceStat"); 
                     continue; 
                 } 
                 NetInterfaceStat ifstat = sigar.getNetInterfaceStat(name); 
@@ -286,6 +314,7 @@ public class LoadBalancedScheme extends AbstractScheme {
             int packetIns = LoadCollection.getAndClearPacketIn();
             long processTime = LoadCollection.getAndClearProcessTime();
             processTime = ( packetIns == 0 ) ? 0L :processTime/packetIns;
+            // calculate 
             ControllerState cs = new ControllerState(1.0 - cpuUsage, sigar.getMem().getFree(), 
             		netErrors, (double)packetIns/CONTROLLER_STATE_UPDATE_INTERVAL,
             		processTime, LoadCollection.getRtt());
@@ -293,14 +322,61 @@ public class LoadBalancedScheme extends AbstractScheme {
             	stateHistory.pollFirst();
             }
         	stateHistory.offerLast(cs);
-        	log.debug("Stored In stateHistory\n {}", stateHistory.toString());
+        	log.debug("Local Controller State In stateHistory\n {}", stateHistory.toString());
     	} catch (Exception e1) { 
             e1.printStackTrace(); 
         }
     }
     
     private void updateControllerStateInCluster() {
+    	if ( clusterServices == null ) {
+            log.error("Un-initialized Cluster Services, can't retrieve caches for scheme: load_balance");
+    	}
     	InetAddress address = clusterServices.getMyAddress();
+
+        if (clusterServices == null || controllerState == null) {
+            log.warn("Cluster service unavailable, or controller state info missing.");
+        }
+        
+        ControllerStateInCluster oldState = controllerState.get(address);
+    	ControllerStateInCluster csic = calculatePacketInAvailable();
+        try {
+            clusterServices.tbegin();
+            if ( oldState != null ) {
+            	long timeStamp = oldState.getTimeStamp();
+            	csic.setTimeStamp(timeStamp);
+            }
+            if (controllerState.putIfAbsent(address, csic) != null) {
+            	if ( oldState == null || !controllerState.replace(address, oldState, csic)) {
+            		clusterServices.trollback();
+            		try {
+            			Thread.sleep(100);
+            		} catch ( InterruptedException e) {}
+            		log.trace("Retrying ... {} with {}", address.toString(), csic.toString());
+            		updateControllerStateInCluster();
+            		return;
+            	}
+                else {
+                	log.trace("Replace successful old={} with new={} for {})", oldState.toString(), csic.toString(), address.toString());
+                }
+            }
+            else {
+                log.trace("Added {} to {}", csic.toString(), address.toString());
+            }
+            clusterServices.tcommit();
+        } catch (Exception e) {
+            log.error("Excepion in changing Controller state to a Node", e);
+            try {
+                clusterServices.trollback();
+            } catch (Exception e1) {
+                log.error("Error Rolling back the controller state Changes ", e);
+            }
+        }
+    }
+    
+    private ControllerStateInCluster calculatePacketInAvailable() {
+        // TODO: calculate Controller State In Cluster
+    	// stateHistory
     	ControllerState first = stateHistory.peekFirst();
     	ControllerState last = stateHistory.peekLast();
     	double averagePacketIns = 0;
@@ -313,184 +389,137 @@ public class LoadBalancedScheme extends AbstractScheme {
     		averageCpuLeft += state.getCpuLeft();
     		averagePacketIns += state.getPacketIns();
     	}
-    	ControllerState cs = new ControllerState(averageCpuLeft/stateHistory.size(), last.getMemLeft(), last.getNetErrors() - first.getNetErrors(),
-    			averagePacketIns/stateHistory.size(), averageProcessTime, last.getRtt());
 
-        if (clusterServices == null || nodeConnections == null) {
-            log.warn("Cluster service unavailable, or node connections info missing.");
-        }
-        
-        ControllerState oldState = controllerState.get(address);
-        try {
-            clusterServices.tbegin();
-            if (controllerState.putIfAbsent(address, cs) != null) {
-            	if ( oldState == null || !controllerState.replace(address, oldState, cs)) {
-            		clusterServices.trollback();
-            		try {
-            			Thread.sleep(100);
-            		} catch ( InterruptedException e) {}
-            		log.debug("Retrying ... {} with {}", address.toString(), cs.toString());
-            		updateControllerStateInCluster();
-            		return;
-            	}
-                else {
-                	log.debug("Replace successful old={} with new={} for {})", oldState.toString(), cs.toString(), address.toString());
-                }
-            }
-            else {
-                log.debug("Added {} to {}", cs.toString(), address.toString());
-            }
-            clusterServices.tcommit();
-        } catch (Exception e) {
-            log.error("Excepion in adding Controller to a Node", e);
-            try {
-                clusterServices.trollback();
-            } catch (Exception e1) {
-                log.error("Error Rolling back the controller state Changes ", e);
-            }
-        }
+    	determinedState = new ControllerState(averageCpuLeft/stateHistory.size(), last.getMemLeft(), last.getNetErrors() - first.getNetErrors(),
+    			averagePacketIns/stateHistory.size(), averageProcessTime, last.getRtt());
+    	long available = maxPacketIns - (int)averagePacketIns/stateHistory.size();
+    	return new ControllerStateInCluster(available, last.getRtt());
     }
 
+    // TODO: add log info?
+	private void checkControllerState() {
+        if (clusterServices == null || controllerState == null) {
+            log.warn("Cluster service unavailable, or controller state info missing.");
+        }
+    	InetAddress address = clusterServices.getMyAddress();
+    	ControllerStateInCluster csic = controllerState.get(address);
+    	if ( csic == null ) {
+    		log.info("[check controller state]: {} is not in use now. Please wait a moment.", address);
+    		return;
+    	}
+    	ControllerLocalState flag = checkLocalState(csic);
+    	log.debug("[check controller state]: The state of controller is {}", flag.name());
+		if ( flag == ControllerLocalState.NORMAL ) {
+			log.debug("[check controller state]: {} does not need to change. {}", address, csic);
+			return ;
+		}
+		if ( flag == ControllerLocalState.BUSY ){
+			// busy.
+			// need to start a new controller?
+			if ( !checkClusterLoad(true) ) {
+				List<InetAddress> workingController = getWorkingControllers();
+				List<InetAddress> remainedController = clusterServices.getClusteredControllers();
+				if ( remainedController.removeAll(workingController) ) {
+					log.error("[check controller state]: {} get remained controller unsuccessfully.", address);
+					return ;
+				}
+				InetAddress newController = remainedController.get(0);
+				// register new controller ...
+				if (!registerNewController(newController)) {
+					log.error("[check controller state]: {} check state again coz registerring failed.", address);
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						return;
+					}
+					checkControllerState();
+					return;
+				}
+			}
+			migrateFitSwitch(false);
+			// migrating.
+		}
+		else if ( flag == ControllerLocalState.IDLE ){
+			if ( getWorkingControllers().size() <= 2 ) { // promise there are more than 2 working controllers.
+				log.info("[check controller state]: the controller node is less than 3. No need to close controllers");
+				return;
+			}
+			if ( System.currentTimeMillis() - csic.getTimeStamp() < MIGRATION_INTERVAL) {
+				log.info("[check controller state]: the controller state is changed at the moment. No need to close controllers");
+				return;
+			}
+			if ( !checkClusterLoad(false)) {
+				migrateFitSwitch(true);
+				log.info("[check controller state]: the controller {} is closed", address);
+			}
+		}
+	}
+
+	private enum ControllerLocalState {
+		BUSY("BUSY"), NORMAL("NORMAL"), IDLE("IDLE");
+		 private String name; 
+		 private ControllerLocalState(String name) {  
+	            this.name = name;  
+	        }  
+	   
+	        @Override  
+	        public String toString() {  
+	            return this.name;  
+	        }  
+	}
+	// TODO:
+	/**
+	 * Determine whether it need migration.
+	 * @param cs
+	 * @return 0: normal, 1: busy, -1: idle
+	 */
+	private ControllerLocalState checkLocalState(ControllerStateInCluster csic) {
+		if ( System.currentTimeMillis() - csic.getTimeStamp() < MIGRATION_INTERVAL ) {
+			return ControllerLocalState.NORMAL;
+		}
+		long available = csic.getPacketInAvailable();
+		
+		if ( available == 0 ) {
+			return ControllerLocalState.BUSY;
+		}
+		
+		ControllerState cs = determinedState;
+		ControllerState upperLimit = stardard;
+		if ( cs.getCpuLeft() < upperLimit.getCpuLeft() || cs.getMemLeft() < upperLimit.getMemLeft() || cs.getNetErrors() >= upperLimit.getNetErrors()
+				|| cs.getProcessTime() >= upperLimit.getProcessTime()) {
+			return ControllerLocalState.BUSY;
+		}
+		else if( cs.getPacketIns() < packetin_lower_limit) {
+			return ControllerLocalState.IDLE;
+		}
+		return ControllerLocalState.NORMAL;
+	}
 	
-    
-    
-//
-//		System.out.println("updater::" + clusterServices.getMyAddress() + " : "
-//				+ avg + " p/s");
-//		if (myControllerBurden.putIfAbsent(clusterServices.getMyAddress(), avg) != null) {
-//			myControllerBurden
-//					.replace(clusterServices.getMyAddress(), myControllerBurden
-//							.get(clusterServices.getMyAddress()), avg);
-//		}
-//		PacketHandler.packet_in_number = 0;// 重新计数
-//
-//		// 更新本控制器连接交换机的消息上报速率。
-//		if (localNodes == null) {
-//			return;
-//		}
-//		for (Node localNode : localNodes) {
-//			if (PacketHandler.burden.containsKey(localNode)) {
-//				int speed = PacketHandler.burden.get(localNode)
-//						/ updateInterval;
-//				nodeburdenMap.put(localNode, speed);// 更新这interval秒内的交换机的上报速率；
-//				System.out.println("updater:: s" + localNode.getID() + " : "
-//						+ nodeburdenMap.get(localNode) + " p/s");
-//				Integer tmp_value = 0;// 重新计数
-//				PacketHandler.burden.put(localNode, tmp_value);
-//			}
-//		}
-//		updateTotalLimits();
-//    }
-     
-//    // 固定的映射关系
-//    public void FixedMapping1() {
-// 		// 构造controller集合
-// 		System.out.println("FixedMapping::start Fixed FatTree Mapping TO 1 controllers");
-// 		if (nodeConnections == null) {
-// 			System.out.println("nodeConnection is null");
-// 		}
-// 		Set<Node>nodeSet = new HashSet<Node>();
-// 		nodeSet = new HashSet<Node>(nodeConnections.keySet());
-// 		for (Node node : nodeSet) {
-//			try {
-//				updateNodeWithoutConstraint(node, InetAddress.getByName("10.15.123.143"));
-//			} catch (UnknownHostException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-// 		}
-// 	}
-//    
-// 	public void FixedMapping2() {
-// 		// 构造controller集合
-// 		System.out.println("FixedMapping::start Fixed FatTree Mapping TO 2 controllers");
-// 		List<InetAddress> controllerList = new ArrayList<InetAddress>();
-// 		try {
-// 			controllerList.add(InetAddress.getByName("10.15.123.143"));
-// 			controllerList.add(InetAddress.getByName("10.15.123.144"));
-// 		} catch (UnknownHostException e) {
-// 			e.printStackTrace();
-// 		}
-// 		if (nodeConnections == null) {
-// 			System.out.println("nodeConnection is null");
-// 		}
-// 		Set<Node>nodeSet = new HashSet<Node>();
-// 		nodeSet = new HashSet<Node>(nodeConnections.keySet());
-// 		for (Node node : nodeSet) {
-// 			long level = getLevel(node);
-// 			long number = getLowestNodeNumber(node);
-// 			//检查是不是判断逻辑错了还是不能用指定的那个函数
-// 			if (level == 1) {
-// 				if (number < 3) {
-// 					updateNodeWithoutConstraint(node, controllerList.get(0));
-// 				} else {
-// 					updateNodeWithoutConstraint(node, controllerList.get(1));
-// 				}
-// 			} else {
-// 				if (number < 5) {
-// 					updateNodeWithoutConstraint(node, controllerList.get(0));
-// 				} else {
-// 					updateNodeWithoutConstraint(node, controllerList.get(1));
-// 				}
-// 			}
-// 		}
-// 	}
-//
-//	public void FixedMapping4() {
-//		// 构造controller集合
-//		System.out.println("FixedMapping::start Fixed FatTree Mapping TO 4 Controllers");
-//
-//		List<InetAddress> controllerList = new ArrayList<InetAddress>();
-//		try {
-//			controllerList.add(InetAddress.getByName("10.15.123.141"));
-//			controllerList.add(InetAddress.getByName("10.15.123.142"));
-//			controllerList.add(InetAddress.getByName("10.15.123.143"));
-//			controllerList.add(InetAddress.getByName("10.15.123.144"));
-//		} catch (UnknownHostException e) {
-//			e.printStackTrace();
-//		}
-//		if (nodeConnections == null) {
-//			System.out.println("nodeConnection is null");
-//		}
-//		Set<Node> nodeSet = new HashSet<Node>();
-//		nodeSet = new HashSet<Node>(nodeConnections.keySet());
-//		for (Node node : nodeSet) {
-//			int level = (int) getLevel(node);
-//			int number = (int) getLowestNodeNumber(node);
-//			// 检查是不是判断逻辑错了还是不能用指定的那个函数
-//			if (level == 1) {
-//				int idx = (int)number-1;
-//				System.out.println("node s"+node.getID() +"->" + controllerList.get(idx));
-//				updateNodeWithoutConstraint(node, controllerList.get(idx));
-//			} else {
-//				//发现如果不是整除，例如5 经过下式计算idx = 2；
-//				int idx = (int) (Math.ceil(number/2));
-//				if (number%2 == 0) {
-//					idx-=1;
-//				}
-//				System.out.println("node s"+node.getID() +"->" + controllerList.get(idx));
-//				updateNodeWithoutConstraint(node, controllerList.get(idx));
-//			}
-//		}
-//	}
-// 	// 拿到nodeID的千位数
-// 	private long getLevel(Node node) {
-// 		long nodeId = (long) node.getID();
-// 		long ans = (nodeId / 1000) % 10;
-// 		return ans;
-// 	}
-//
-// 	// 拿到nodeId的个位数
-// 	private long getLowestNodeNumber(Node node) {
-// 		long nodeId = (long) node.getID();
-// 		long ans = nodeId%10;
-// 		return ans;
-// 	}
-// 	public void startChecker() {
-//		;
-//	}
+	// TODO:
+	/**
+	 * Determine whether the cluster is too busy.
+	 * @param isUpper: true: busy, false: idle.
+	 * @return true: common, false: busy/idle.
+	 */
+	private boolean checkClusterLoad(boolean isUpper) {
 
+		return true;
+	}
 
+	// TODO: register new controller. important!
+	private boolean registerNewController(InetAddress newController) {
+		return true;
+	}
+	
+
+	
+	private void migrateFitSwitch(boolean needMigrateAll) {
+		// TODO Auto-generated method stub
+		// replaces need new ControllerStateInCluster.
+		
+	}
+	
     private static void property() throws UnknownHostException { 
         Runtime r = Runtime.getRuntime(); 
         log.info("JVM total memory:\t" + r.totalMemory()); // <--------

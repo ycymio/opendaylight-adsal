@@ -45,11 +45,10 @@ public class ControllerState {
 
 	@Override
 	public String toString() {
-		return "\nControllerState [cpuLeft=" + cpuLeft + ", memLeft=" + memLeft
+		return "ControllerState [cpuLeft=" + cpuLeft + ", memLeft=" + memLeft
 				+ ", netErrors=" + netErrors + ", packetIns=" + packetIns
 				+ ", processTime=" + processTime + ", rtt=" + rtt + "]";
 	}
-	
 }
 
 

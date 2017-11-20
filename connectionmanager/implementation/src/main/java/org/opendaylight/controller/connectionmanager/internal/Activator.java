@@ -68,6 +68,8 @@ public class Activator extends ComponentActivatorAbstractBase {
             for (ConnectionMgmtScheme scheme:ConnectionMgmtScheme.values()) {
                 propSet.add("connectionmanager."+scheme.name()+".nodeconnections");
             }
+//            propSet.add("connectionmanager.load_balanced.controllerstate");
+//            propSet.add("connectionmanager.load_balanced.migrationlock");
             props.put("cachenames", propSet);
             props.put("scope", "Global");
 
