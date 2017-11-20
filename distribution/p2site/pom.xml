@@ -437,6 +437,11 @@
                   <transitive>false</transitive>
                   <override>false</override>
                 </artfiact>
+                <artfiact>
+                  <id>laboratory.controller.efficiency:0.1.0</id>
+                  <transitive>false</transitive>
+                  <override>false</override>
+                </artfiact>
               </artifacts>
             </configuration>
           </execution>

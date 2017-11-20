@@ -38,6 +38,7 @@ import org.opendaylight.controller.clustering.services.ICoordinatorChangeAware;
 import org.opendaylight.controller.connectionmanager.ConnectionMgmtScheme;
 import org.opendaylight.controller.connectionmanager.IConnectionManager;
 import org.opendaylight.controller.connectionmanager.scheme.AbstractScheme;
+import org.opendaylight.controller.connectionmanager.scheme.LoadBalancedScheme;
 import org.opendaylight.controller.connectionmanager.scheme.SchemeFactory;
 import org.opendaylight.controller.sal.connection.ConnectionConstants;
 import org.opendaylight.controller.sal.connection.ConnectionLocality;
@@ -448,4 +449,19 @@ public class ConnectionManager implements IConnectionManager,
             return Collections.emptySet();
         return scheme.getControllers(node);
     }
+
+	/*******************************************************
+	 *               modified by ycy                       *
+	 *******************************************************/
+    public void _stopTask(CommandInterpreter ci) {
+        AbstractScheme scheme = schemes.get(activeScheme);
+    	if ( scheme instanceof LoadBalancedScheme) {
+    		((LoadBalancedScheme)scheme).stopScheduledTask();
+    	}
+    }
+
+    public void _test(CommandInterpreter ci) {
+		LoadBalancedScheme.test();
+    }
+    
 }

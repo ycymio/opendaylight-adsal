@@ -237,4 +237,6 @@ public interface ISwitch {
      * Send a FLOW_MOD message with a wildcard match and action=DELETE.
      */
     public void deleteAllFlows();
+
+    public long getRtt();
 }

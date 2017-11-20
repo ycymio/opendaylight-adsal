@@ -32,7 +32,27 @@
       <groupId>org.opendaylight.controller</groupId>
       <artifactId>sal.connection</artifactId>
     </dependency>
+    <dependency>
+		<groupId>org.hyperic.sigar</groupId>
+		<artifactId>com.springsource.org.hyperic.sigar</artifactId>
+		<version>1.6.3</version>
+	</dependency>
+	<dependency>
+		<groupId>com.google.guava</groupId>
+		<artifactId>guava</artifactId>
+		<version>18.0</version>
+	</dependency>
+	<dependency>
+		<groupId>laboratory.controller</groupId>
+		<artifactId>efficiency</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+		<type>bundle</type>
+	</dependency>
   </dependencies>
+
+  <properties>
+    <checkstyle.skip>true</checkstyle.skip>
+  </properties>
 
   <build>
     <plugins>
@@ -51,7 +71,10 @@
               org.eclipse.osgi.framework.console,
               org.osgi.framework,
               org.slf4j,
-              org.apache.felix.dm</Import-Package>
+              org.apache.felix.dm,
+              org.hyperic.sigar,
+              laboratory.controller.efficiency
+              </Import-Package>
             <Export-Package></Export-Package>
             <Bundle-Activator>org.opendaylight.controller.connectionmanager.internal.Activator</Bundle-Activator>
           </instructions>

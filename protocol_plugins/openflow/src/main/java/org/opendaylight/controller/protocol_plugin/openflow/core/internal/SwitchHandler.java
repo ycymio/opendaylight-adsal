@@ -946,4 +946,16 @@ public class SwitchHandler implements ISwitch {
                 .setLength((short) OFFlowMod.MINIMUM_LENGTH);
         asyncFastSend(flowMod);
     }
+
+    /*******************************************************
+     *               modified by ycy                       *
+     *******************************************************/
+    @Override
+    public long getRtt() {
+        long startTime = System.nanoTime();
+        OFMessage echo = factory.getMessage(OFType.ECHO_REQUEST);
+        asyncFastSend(echo);
+        long endTime=System.nanoTime();
+        return endTime-startTime;
+    }
 }

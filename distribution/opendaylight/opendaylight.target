@@ -79,6 +79,7 @@
 <unit id="org.eclipse.virgo.util.parser.manifest" version="3.6.0.RELEASE"/>
 <unit id="org.apache.felix.dependencymanager" version="3.1.0"/>
 <unit id="com.springsource.org.hyperic.sigar" version="1.6.4"/>
+<unit id="laboratory.controller.efficiency" version="0.1.0"/>
 <repository location="http://nexus.opendaylight.org/content/repositories/controllerp2site/"/>
 </location>
 </locations>

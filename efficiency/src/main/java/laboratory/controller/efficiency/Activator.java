@@ -1,12 +1,12 @@
-package controller.efficiency;
+package laboratory.controller.efficiency;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.felix.dm.Component;
-import org.opendaylight.controller.connectionmanager.IConnectionManager;
 import org.opendaylight.controller.forwardingrulesmanager.IForwardingRulesManager;
 import org.opendaylight.controller.hosttracker.IfIptoHost;
+import org.opendaylight.controller.protocol_plugin.openflow.core.IController;
 import org.opendaylight.controller.sal.core.ComponentActivatorAbstractBase;
 import org.opendaylight.controller.sal.packet.IDataPacketService;
 import org.opendaylight.controller.sal.packet.IListenDataPacket;
@@ -31,9 +31,13 @@ public class Activator extends ComponentActivatorAbstractBase {
              c.setInterface(new String[] { ITopologyManagerAware.class.getName(),
                      IListenDataPacket.class.getName() }, props);
 
-             c.add(createServiceDependency().setService(IConnectionManager.class)
-                     .setCallbacks("setIConnectionManager", "unsetIConnectionManager").setRequired(false));
+//             c.add(createServiceDependency().setService(IConnectionManager.class)
+//                     .setCallbacks("setIConnectionManager", "unsetIConnectionManager").setRequired(false));
            //topology service
+             c.add(createServiceDependency()
+                     .setService(IController.class, "(name=Controller)")
+                     .setCallbacks("setController", "unsetController")
+                     .setRequired(true));
             c.add(createContainerServiceDependency(containerName).setService(
                     ITopologyManager.class).setCallbacks(
                     "setTopologyManager", "unsetTopologyManager")

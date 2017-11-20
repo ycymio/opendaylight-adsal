@@ -10,7 +10,7 @@
 
   <groupId>laboratory.controller</groupId>
   <artifactId>efficiency</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <scm>
@@ -41,7 +41,7 @@
                laboratory.controller.efficiency
             </Export-Package>
             <Bundle-Activator>
-               controller.efficiency.Activator
+               laboratory.controller.efficiency.Activator
             </Bundle-Activator>
           </instructions>
           <manifestLocation>${project.basedir}/META-INF</manifestLocation>
@@ -62,10 +62,6 @@
 		<groupId>org.opendaylight.controller</groupId>
 		<artifactId>hosttracker</artifactId>
 	</dependency>
-    <dependency>
-      <groupId>org.opendaylight.controller</groupId>
-      <artifactId>connectionmanager</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.opendaylight.controller</groupId>
       <artifactId>topologymanager</artifactId>
@@ -95,6 +91,10 @@
 		<groupId>com.google.guava</groupId>
 		<artifactId>guava</artifactId>
 		<version>18.0</version>
+	</dependency>
+	<dependency>
+		<groupId>org.opendaylight.controller</groupId>
+		<artifactId>protocol_plugins.openflow</artifactId>
 	</dependency>
   </dependencies>
 </project>
