@@ -1,8 +1,10 @@
 package org.opendaylight.controller.connectionmanager.loadbalanced;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class ControllerStateInCluster {
+public class ControllerStateInCluster implements Serializable {
+	private static final long serialVersionUID = -2951885851207432553L;
 	private long packetInAvailable;
 	private Map<Long, Long> rtt;
 	private long timeStamp; // minimal interval between migration

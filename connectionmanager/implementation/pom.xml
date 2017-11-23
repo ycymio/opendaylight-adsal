@@ -75,7 +75,7 @@
               org.hyperic.sigar,
               laboratory.controller.efficiency
               </Import-Package>
-            <Export-Package></Export-Package>
+            <Export-Package>org.opendaylight.controller.connectionmanager.loadbalanced</Export-Package>
             <Bundle-Activator>org.opendaylight.controller.connectionmanager.internal.Activator</Bundle-Activator>
           </instructions>
           <manifestLocation>${project.basedir}/META-INF</manifestLocation>

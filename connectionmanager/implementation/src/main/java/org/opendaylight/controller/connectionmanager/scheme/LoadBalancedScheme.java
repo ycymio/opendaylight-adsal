@@ -102,6 +102,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 
     protected LoadBalancedScheme(IClusterGlobalServices clusterServices) {
         super(clusterServices, ConnectionMgmtScheme.LOAD_BALANCED);
+        log.info("java.library.path is {}", System.getProperty("java.library.path"));
         controllerStateCacheName = "connectionmanager.load_balanced.controllerstate";
 //        migrationLockName = "connectionmanager.load_balanced.migrationlock";
         // some cache operations here
@@ -144,6 +145,11 @@ public class LoadBalancedScheme extends AbstractScheme {
             	if ( controllerState != null) {
             		collectControllerState();
             		updateInClusterService.execute(updateRunnable);
+    				Iterator<Map.Entry<InetAddress, ControllerStateInCluster>> entries = controllerState.entrySet().iterator(); 
+    		        while (entries.hasNext()) {
+    		            Map.Entry<InetAddress, ControllerStateInCluster> entry = entries.next();
+                		log.debug("here: {} - {}", entry.getKey(), entry.getValue());
+    		        }
             	}
           	    long endTime=System.nanoTime();
           	    log.debug("[collect controller state] Process Time:"+(endTime-startTime)+"ns");
@@ -152,7 +158,7 @@ public class LoadBalancedScheme extends AbstractScheme {
         scheduledService = Executors.newScheduledThreadPool(2); 
         scheduledService.scheduleAtFixedRate(collectRunnable, INTERNAL_THREAD_START_TIME, CONTROLLER_STATE_UPDATE_INTERVAL, TimeUnit.SECONDS);  
 //        scheduledServiceForCheck = Executors.newSingleThreadScheduledExecutor();
-        scheduledService.scheduleAtFixedRate(checkRunnable, INTERNAL_THREAD_START_TIME, CONTROLLER_STATE_CHECK_INTERVAL, TimeUnit.SECONDS);
+        scheduledService.scheduleAtFixedRate(checkRunnable, INTERNAL_THREAD_START_TIME + 5, CONTROLLER_STATE_CHECK_INTERVAL, TimeUnit.SECONDS);
     }
     
     // Initialize cache.
@@ -504,7 +510,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 			// migrating.
 		}
 		else if ( flag == ControllerLocalState.IDLE ){
-			if ( getWorkingControllers().size() <= 2 ) { // promise there are more than 2 working controllers.
+			if ( controllerState.size() - calculateCountOfState(ControllerLocalState.HIBERNATE) <= 2 ) { // promise there are more than 2 working controllers.
 				log.info("[check controller state]: the controller node is less than 3. No need to close controllers");
 				return;
 			}
@@ -557,6 +563,18 @@ public class LoadBalancedScheme extends AbstractScheme {
 		return ControllerLocalState.HIBERNATE;
 	}
 	
+	private int calculateCountOfState(ControllerLocalState cls) {
+		int count = 0;
+		Iterator<Map.Entry<InetAddress, ControllerStateInCluster>> entries = controllerState.entrySet().iterator();    
+        while (entries.hasNext()) {
+            Map.Entry<InetAddress, ControllerStateInCluster> entry = entries.next();
+            if ( entry.getValue().getState() == cls ) {
+            	++count;
+            }
+        }
+        return count;
+	}
+	
 	/**
 	 * Determine whether the cluster is too busy.
 	 * @param isUpper: true: busy, false: idle.
@@ -564,27 +582,13 @@ public class LoadBalancedScheme extends AbstractScheme {
 	 */
 	private boolean checkClusterLoad(boolean isUpper) {
 		if ( isUpper ) {
-			int count = 0;
-			Iterator<Map.Entry<InetAddress, ControllerStateInCluster>> entries = controllerState.entrySet().iterator();    
-	        while (entries.hasNext()) {
-	            Map.Entry<InetAddress, ControllerStateInCluster> entry = entries.next();
-	            if ( entry.getValue().getState() == ControllerLocalState.BUSY ) {
-	            	++count;
-	            }
-	        }
+			int count = calculateCountOfState(ControllerLocalState.BUSY);
 	        if ( count > this.getWorkingControllers().size() * cluster_busy_ratio) {
 	        	return false;
 	        }
 		}
 		else {
-			int count = 0;
-			Iterator<Map.Entry<InetAddress, ControllerStateInCluster>> entries = controllerState.entrySet().iterator();    
-	        while (entries.hasNext()) {
-	            Map.Entry<InetAddress, ControllerStateInCluster> entry = entries.next();
-	            if ( entry.getValue().getState() == ControllerLocalState.IDLE ) {
-	            	++count;
-	            }
-	        }
+			int count = calculateCountOfState(ControllerLocalState.IDLE);
 	        if ( count > this.getWorkingControllers().size() * cluster_idle_ratio) {
 	        	return false;
 	        }
@@ -600,6 +604,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 		log.warn("[register New Controller]: " + status.getDescription());
 		return false;
 	}
+	
 
 	private boolean hibernateCurrentController() {
 		Status status = setControllerState(null, ControllerLocalState.HIBERNATE);
@@ -621,13 +626,16 @@ public class LoadBalancedScheme extends AbstractScheme {
         }
         
         ControllerStateInCluster oldState = controllerState.get(address);
-        if ( System.currentTimeMillis() - oldState.getTimeStamp() < MIGRATION_INTERVAL) {
+        log.debug("set Controller State: old={}, expect={}, new={}", oldState, expectState, newState);
+        if ( oldState != null && System.currentTimeMillis() - oldState.getTimeStamp() < MIGRATION_INTERVAL) {
     		return new Status(StatusCode.CONFLICT, "cannot change current controller's state from " + expectState + " to " + newState + " because of concurrency.");
         }
-        if ( expectState != null && expectState != oldState.getState()) {
+        if ( oldState != null &&  expectState != null && expectState != oldState.getState()) {
     		return new Status(StatusCode.CONFLICT, "cannot change current controller's state from " + expectState + " to " + newState + " because of concurrency.");
         }
-    	ControllerStateInCluster csic = new ControllerStateInCluster(oldState.getPacketInAvailable(), oldState.getRtt(), newState);
+        ControllerStateInCluster csic = oldState != null ? 
+        		new ControllerStateInCluster(oldState.getPacketInAvailable(), oldState.getRtt(), newState):
+        		calculatePacketInAvailable();
     	csic.setTimeStamp(System.currentTimeMillis());
         try {
             clusterServices.tbegin();
@@ -637,7 +645,7 @@ public class LoadBalancedScheme extends AbstractScheme {
             		return new Status(StatusCode.CONFLICT, "cannot change current controller's state from " + expectState + " to " + newState + " because of concurrency.");
             	}
             	else {
-            		log.trace("Replace successful old={} with new={} for {})", expectState.toString(), newState.toString(), address.toString());
+            		log.trace("Replace successful old={} with new={} for {})", expectState, newState, address);
             	}
             }
             else {
@@ -655,7 +663,7 @@ public class LoadBalancedScheme extends AbstractScheme {
         }
 		return new Status(StatusCode.SUCCESS);
 	}
-	
+
 	private void migrateFitSwitch(boolean needMigrateAll, int times) {
 		// TODO: replaces need new ControllerStateInCluster.
 		// RTT 
