@@ -6,11 +6,13 @@ public class ControllerStateInCluster {
 	private long packetInAvailable;
 	private Map<Long, Long> rtt;
 	private long timeStamp; // minimal interval between migration
+	private ControllerLocalState state;
 	
-	public ControllerStateInCluster(long packetIns, Map<Long, Long> rtt) {
+	public ControllerStateInCluster(long packetIns, Map<Long, Long> rtt, ControllerLocalState state) {
 		this.packetInAvailable = packetIns;
 		this.rtt = rtt;
 		timeStamp = 0L;
+		this.state = state;
 	}
 
 	public long getTimeStamp() {
@@ -29,9 +31,19 @@ public class ControllerStateInCluster {
 		return rtt;
 	}
 
+	public ControllerLocalState getState() {
+		return state;
+	}
+
+	public void setState(ControllerLocalState state) {
+		this.state = state;
+	}
+
 	@Override
 	public String toString() {
-		return "ControllerStateInCluster [packetInAvailable=" + packetInAvailable + ", rtt="
-				+ rtt + ", timeStamp=" + timeStamp + "]";
+		return "ControllerStateInCluster [packetInAvailable="
+				+ packetInAvailable + ", rtt=" + rtt + ", timeStamp="
+				+ timeStamp + ", state=" + state + "]";
 	}
+
 }
