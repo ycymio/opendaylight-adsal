@@ -47,7 +47,7 @@ public class ControllerState {
 	public String toString() {
 		return "ControllerState [cpuLeft=" + cpuLeft + ", memLeft=" + memLeft
 				+ ", netErrors=" + netErrors + ", packetIns=" + packetIns
-				+ ", processTime=" + processTime + ", rtt=" + rtt + "]";
+				+ ", processTime=" + processTime + ", rtt=" + rtt + "]\n";
 	}
 }
 

@@ -43,7 +43,7 @@ public class MessageReadWriteService implements IMessageReadWrite {
         this.socket = socket;
         this.selector = selector;
         this.factory = new BasicFactory();
-        this.inBuffer = ByteBuffer.allocateDirect(bufferSize);
+        this.inBuffer = ByteBuffer.allocateDirect(bufferSize*30);
         this.outBuffer = ByteBuffer.allocateDirect(bufferSize);
         this.clientSelectionKey = this.socket.register(this.selector,
                 SelectionKey.OP_READ);
@@ -121,6 +121,9 @@ public class MessageReadWriteService implements IMessageReadWrite {
      */
     @Override
     public List<OFMessage> readMessages() throws Exception {
+        if ( inBuffer.remaining() < 1000 || outBuffer.remaining() < 1000 ) {
+            System.out.println(outBuffer.remaining() + " " + inBuffer.remaining());
+       }
         if (!socket.isOpen()) {
             return null;
         }

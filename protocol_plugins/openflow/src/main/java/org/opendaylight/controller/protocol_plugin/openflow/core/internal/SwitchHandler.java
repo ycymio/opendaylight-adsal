@@ -131,6 +131,7 @@ public class SwitchHandler implements ISwitch {
         this.xid = new AtomicInteger(this.socket.hashCode());
         this.periodicTimer = null;
         this.executor = Executors.newFixedThreadPool(4);
+//        this.executor = Executors.newCachedThreadPool();
         this.messageWaitingDone = new ConcurrentHashMap<Integer, Callable<Object>>();
         this.responseTimerValue = MESSAGE_RESPONSE_TIMER;
         String rTimer = System.getProperty("of.messageResponseTimer");

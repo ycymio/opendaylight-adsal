@@ -63,9 +63,9 @@ public class LoadBalancedScheme extends AbstractScheme {
 	private static final Logger log = LoggerFactory.getLogger(LoadBalancedScheme.class);
 	
 	// some configurations of scheduled task.
-	private static final int INTERNAL_THREAD_START_TIME = 120;
-	private static final int CONTROLLER_STATE_UPDATE_INTERVAL = 60;
-	private static final int CONTROLLER_STATE_CHECK_INTERVAL = 60;
+	private static final int INTERNAL_THREAD_START_TIME = 30;
+	private static final int CONTROLLER_STATE_UPDATE_INTERVAL = 1;
+	private static final int CONTROLLER_STATE_CHECK_INTERVAL = 1;
 	private static final int MIGRATION_INTERVAL = 120;
 	private static final int STATE_HISTORY_SIZE = 10;
 	
@@ -78,10 +78,11 @@ public class LoadBalancedScheme extends AbstractScheme {
 	private static long rtt_upper_limit = 100000;
 	
 	private static ScheduledExecutorService scheduledService = null;
+	private static ScheduledExecutorService scheduledServiceForCheck = null;
 	private static ExecutorService updateInClusterService = null;
     private static AbstractScheme myScheme= null;
     private LinkedList<ControllerState> stateHistory;
-    private static long maxPacketIns = 500L;
+    private static long maxPacketIns = 300L;
     
     private final String controllerStateCacheName;
     protected static ConcurrentMap<InetAddress, ControllerStateInCluster> controllerState;
@@ -122,43 +123,59 @@ public class LoadBalancedScheme extends AbstractScheme {
     private void startScheduledService() {
         final Runnable updateRunnable = new Runnable() {
         	public void run() {
-        		long startTime = System.nanoTime();
-        		updateControllerStateInCluster();
-        		long endTime = System.nanoTime();
-        		log.debug("[update controller state] Process Time:"+(endTime-startTime)+"ns");
+        		try {
+            		long startTime = System.nanoTime();
+            		updateControllerStateInCluster();
+            		long endTime = System.nanoTime();
+            		log.debug("[update controller state] Process Time:"+(endTime-startTime)+"ns");        			
+        		}
+        		catch (Exception e) {
+        			e.printStackTrace();
+        		}
         	}
         };
         Runnable checkRunnable = new Runnable() {
         	public void run() {
-        		long startTime = System.nanoTime();
-        		checkControllerState();
-        		long endTime = System.nanoTime();
-        		log.debug("[check controller state] Process Time:"+(endTime-startTime)+"ns");
+        		try {
+            		long startTime = System.nanoTime();
+            		checkControllerState();
+            		long endTime = System.nanoTime();
+            		log.debug("[check controller state] Process Time:"+(endTime-startTime)+"ns");
+        		}
+        		catch (Exception e) {
+        			e.printStackTrace();
+        		}
         	}
         };
         updateInClusterService = Executors.newSingleThreadExecutor();
     	// Scheduled Task for Update Load.
         Runnable collectRunnable = new Runnable() {  
             public void run() {  
-                // task to run goes here  
-            	long startTime = System.nanoTime();
-            	if ( controllerState != null) {
-            		collectControllerState();
-            		updateInClusterService.execute(updateRunnable);
-    				Iterator<Map.Entry<InetAddress, ControllerStateInCluster>> entries = controllerState.entrySet().iterator(); 
-    		        while (entries.hasNext()) {
-    		            Map.Entry<InetAddress, ControllerStateInCluster> entry = entries.next();
-                		log.debug("here: {} - {}", entry.getKey(), entry.getValue());
-    		        }
+            	try {
+                    // task to run goes here  
+                	long startTime = System.nanoTime();
+                	if ( controllerState != null) {
+                		collectControllerState();
+                		updateInClusterService.execute(updateRunnable);
+        				Iterator<Map.Entry<InetAddress, ControllerStateInCluster>> entries = controllerState.entrySet().iterator(); 
+        		        while (entries.hasNext()) {
+        		            Map.Entry<InetAddress, ControllerStateInCluster> entry = entries.next();
+                    		log.debug("here: {} - {}", entry.getKey(), entry.getValue());
+        		        }
+                	}
+              	    long endTime=System.nanoTime();
+              	    log.debug("[collect controller state] Process Time:"+(endTime-startTime)+"ns");
             	}
-          	    long endTime=System.nanoTime();
-          	    log.debug("[collect controller state] Process Time:"+(endTime-startTime)+"ns");
+            	catch (Exception e) { // can use Callable.
+            		e.printStackTrace();
+            	}
             }  
         };  
-        scheduledService = Executors.newScheduledThreadPool(2); 
+        scheduledService = Executors.newScheduledThreadPool(1); 
+        scheduledServiceForCheck = Executors.newScheduledThreadPool(1); 
         scheduledService.scheduleAtFixedRate(collectRunnable, INTERNAL_THREAD_START_TIME, CONTROLLER_STATE_UPDATE_INTERVAL, TimeUnit.SECONDS);  
 //        scheduledServiceForCheck = Executors.newSingleThreadScheduledExecutor();
-        scheduledService.scheduleAtFixedRate(checkRunnable, INTERNAL_THREAD_START_TIME + 5, CONTROLLER_STATE_CHECK_INTERVAL, TimeUnit.SECONDS);
+        scheduledServiceForCheck.scheduleAtFixedRate(checkRunnable, INTERNAL_THREAD_START_TIME + 5, CONTROLLER_STATE_CHECK_INTERVAL, TimeUnit.SECONDS);
     }
     
     // Initialize cache.
@@ -285,13 +302,20 @@ public class LoadBalancedScheme extends AbstractScheme {
     }
 
     public void stopScheduledTask() {
-    	scheduledService.shutdown();
+//    	scheduledService.shutdown();
     }
     
     // TODO: load balance in the beginning.
     @Override
     public boolean isConnectionAllowedInternal(Node node) {
         Set <InetAddress> controllers = nodeConnections.get(node);
+        ControllerStateInCluster csic = controllerState.get(clusterServices.getMyAddress());
+        if ( csic == null ) {
+        	// TODO: ??
+        }
+        if ( csic != null && csic.getState() == ControllerLocalState.HIBERNATE ) {
+        	return false;
+        }
         if (controllers == null || controllers.size() == 0) return true;
         return (controllers.size() == 1 && controllers.contains(clusterServices.getMyAddress()));
     }
@@ -306,7 +330,6 @@ public class LoadBalancedScheme extends AbstractScheme {
     			log.error("[collect controller state]: cannot read system's properties because sigar is null");
     			return;
     		}
-
             // cpu
             CpuInfo infos[] = sigar.getCpuInfoList(); 
             CpuPerc cpuList[] = null; 
@@ -314,7 +337,7 @@ public class LoadBalancedScheme extends AbstractScheme {
             double cpuUsage = 0.0d;
             for (int i = 0; i < infos.length; i++) { 
                 cpuUsage += cpuList[i].getCombined();
-            } 
+            }
             cpuUsage /= infos.length;
             
             // net error
@@ -340,6 +363,7 @@ public class LoadBalancedScheme extends AbstractScheme {
                 NetInterfaceStat ifstat = sigar.getNetInterfaceStat(name); 
                 netErrors += ifstat.getRxErrors() + ifstat.getTxErrors() + ifstat.getRxDropped() + ifstat.getTxDropped();
             }
+//            int packetIns = 0;
             int packetIns = LoadCollection.getAndClearPacketIn();
             long processTime = LoadCollection.getAndClearProcessTime();
             processTime = ( packetIns == 0 ) ? 0L :processTime/packetIns;
@@ -363,9 +387,11 @@ public class LoadBalancedScheme extends AbstractScheme {
 	        }
             
             // calculate 
+//	        long netErrorBefore = (stateHistory.size() > 0) ? stateHistory.peekLast().getNetErrors(): 0L;
             ControllerState cs = new ControllerState(1.0 - cpuUsage, sigar.getMem().getFree(), 
             		netErrors, (double)packetIns/CONTROLLER_STATE_UPDATE_INTERVAL,
             		processTime, LoadCollection.getRtt());
+            log.info("Collect: {} {} {} {} {} {}", cpuUsage, sigar.getMem().getTotal(), cs.getNetErrors(), cs.getPacketIns(), processTime);
             while ( stateHistory.size() >= STATE_HISTORY_SIZE ) {
             	stateHistory.pollFirst();
             }
@@ -397,6 +423,11 @@ public class LoadBalancedScheme extends AbstractScheme {
             		csic.setState(ControllerLocalState.HIBERNATE);
             	}
             	else if ( csic.getState() == ControllerLocalState.HIBERNATE ){
+            		csic.setState(ControllerLocalState.NORMAL);
+            	}
+            }
+            else {
+            	if ( csic.getState() == ControllerLocalState.HIBERNATE && this.getNodes(address) != null ) {
             		csic.setState(ControllerLocalState.NORMAL);
             	}
             }
@@ -443,7 +474,9 @@ public class LoadBalancedScheme extends AbstractScheme {
     		averageCpuLeft += state.getCpuLeft();
     		averagePacketIns += state.getPacketIns();
     	}
-    	determinedState = new ControllerState(averageCpuLeft/stateHistory.size(), last.getMemLeft(), last.getNetErrors() - first.getNetErrors(),
+    	long historyError = ( stateHistory.size() > 2 ) ? stateHistory.get(stateHistory.size()-2).getNetErrors(): 0;
+
+    	determinedState = new ControllerState(averageCpuLeft/stateHistory.size(), last.getMemLeft(), last.getNetErrors() - historyError,
     			averagePacketIns/stateHistory.size(), averageProcessTime, last.getRtt());
 		// ControllerState upperLimit = stardard;
     	long available = maxPacketIns - (int)averagePacketIns/stateHistory.size();
@@ -461,7 +494,7 @@ public class LoadBalancedScheme extends AbstractScheme {
     		return;
     	}
     	ControllerLocalState flag = csic.getState();
-    	log.debug("[check controller state]: The state of controller is {}", flag.toString());
+    	log.info("[check controller state]: The state of controller is {}", flag.toString());
 		if ( flag == ControllerLocalState.HIBERNATE || flag == ControllerLocalState.NORMAL ||  System.currentTimeMillis() - csic.getTimeStamp() < MIGRATION_INTERVAL) {
 			log.debug("[check controller state]: {} does not need to change. {}", address, csic);
 			return ;
@@ -479,6 +512,10 @@ public class LoadBalancedScheme extends AbstractScheme {
 		            	remainedController.add(entry.getKey());
 						list.add(entry.getKey().toString());
 		            }
+		        }
+		        if ( list.size() == 0 ) {
+		        	log.warn("[check controller state]: the cluster needs more sleepy or working controllers.");
+		        	return ;
 		        }
 				Collections.sort(list);
 				String newControllerName = list.get(0);

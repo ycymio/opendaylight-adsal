@@ -53,10 +53,12 @@ import org.opendaylight.controller.sal.packet.IPv4;
 import org.opendaylight.controller.sal.packet.Packet;
 import org.opendaylight.controller.sal.packet.PacketResult;
 import org.opendaylight.controller.sal.packet.RawPacket;
+import org.opendaylight.controller.sal.packet.UDP;
 import org.opendaylight.controller.sal.topology.TopoEdgeUpdate;
 import org.opendaylight.controller.sal.utils.EtherTypes;
 import org.opendaylight.controller.sal.utils.NetUtils;
 import org.opendaylight.controller.sal.utils.Status;
+import org.opendaylight.controller.sal.utils.StatusCode;
 import org.opendaylight.controller.topologymanager.ITopologyManager;
 import org.opendaylight.controller.topologymanager.ITopologyManagerAware;
 import org.osgi.framework.BundleContext;
@@ -84,6 +86,7 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
     private Graph<Node, Edge> topo;
     private DijkstraShortestPath<Node, Edge> shortPath;
     private static AtomicInteger numsOfPacketIn = new AtomicInteger(0);
+//    private static int numsOfPacketIn = 0;
     private static AtomicLong processTime = new AtomicLong(0L);
     private static ConcurrentMap<Node, AtomicInteger> loadMap = new ConcurrentHashMap<Node, AtomicInteger>();
 
@@ -139,16 +142,19 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
     }
     
     private boolean installFlow(String flowName, Flow flow, Node node) {
+    	flow.setIdleTimeout((short)1);
+    	flow.setHardTimeout((short)1);
         Status status = forwarder.modifyOrAddFlowEntry(new FlowEntry("loadbalanced", flowName, flow, node));
+//    	Status status = new Status(StatusCode.SUCCESS);
 
-    	System.out.println(flow);
+    	// System.out.println(flow);
         if (!status.isSuccess()) {
             log.error(
                     "SDN Plugin failed to program the flow: {} @ {}. Failure is: {}",
                     flow, node, status.getDescription());
             return false;
         } else {
-            log.info(flow.toString());
+            // log.info(flow.toString());
             return true;
         }
     }
@@ -172,26 +178,19 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
             return PacketResult.IGNORED;
         }
         Packet fmtPkt = this.dataPacketService.decodeDataPacket(inPkt);
-        
         if (!(fmtPkt instanceof Ethernet)) {
             return PacketResult.IGNORED;
         } 
         else if (fmtPkt.getPayload() instanceof IPv4) {
-//		          if ( !(ipv4.getPayload() instanceof UDP) ) {
-//		          return PacketResult.IGNORED;
-//		      }
-//		      
-//		      final UDP udp = (UDP) ipv4.getPayload();
-//		      short sport = udp.getDestinationPort();
-//		      if ( sport == (short)67 ) {
-//		          return PacketResult.IGNORED;
-//		      }
             final IPv4 ipv4 = (IPv4) fmtPkt.getPayload();
+        	log.debug("\t -- " + numsOfPacketIn + " -- ");
             NodeConnector incoming_connector = inPkt.getIncomingNodeConnector();
             Node snode = incoming_connector.getNode();
             // load collecting here.
             // Maybe concurrency happens, but the effect of this is small.
+            
             numsOfPacketIn.incrementAndGet();
+            // log.debug("nums of packet_in: {}", numsOfPacketIn);
             if ( !loadMap.containsKey(snode)) {
             	loadMap.putIfAbsent(snode, new AtomicInteger(1));
             }
@@ -201,7 +200,7 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
             try {
 
                 int srip = ipv4.getSourceAddress(), dvip = ipv4.getDestinationAddress();
-                // InetAddress sIP = NetUtils.getInetAddress(srip);
+                InetAddress sIP = NetUtils.getInetAddress(srip);
                 InetAddress dIP = NetUtils.getInetAddress(dvip);
                 
                 if (dIP == null) {
@@ -211,50 +210,75 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
                 HostNodeConnector host = hostTracker.hostFind(dIP);
 
                 Node dnode = host.getnodeconnectorNode();
-
                 
 
                 Match smatch = new Match();
                 smatch.setField(new MatchField(MatchType.DL_TYPE, EtherTypes.IPv4.shortValue()));
+//                smatch.setField(new MatchField(MatchType.DL_TYPE, EtherTypes.IPv4.shortValue()));
                 smatch.setField(new MatchField(MatchType.NW_SRC, intToInetAddress(srip)));
                 smatch.setField(new MatchField(MatchType.NW_DST, intToInetAddress(dvip)));
+            	if ( ipv4.getPayload() instanceof UDP ) {
+                	final UDP udp = (UDP) ipv4.getPayload();
+                	short dport = udp.getDestinationPort();
+                	if ( dport != (short)67 ) {
+                        smatch.setField(new MatchField(MatchType.TP_DST, dport));
+                        smatch.setField(new MatchField(MatchType.NW_PROTO, (byte)0x11));
+                	}
+            	}
 
                 Match dmatch=new Match();
                 dmatch.setField(new MatchField(MatchType.DL_TYPE, EtherTypes.IPv4.shortValue()));
                 dmatch.setField(new MatchField(MatchType.NW_SRC, intToInetAddress(dvip)));
                 dmatch.setField(new MatchField(MatchType.NW_DST, intToInetAddress(srip)));
+            	if ( ipv4.getPayload() instanceof UDP ) {
+                	final UDP udp = (UDP) ipv4.getPayload();
+                	short dport = udp.getDestinationPort();
+                	if ( dport != (short)67 ) {
+                        smatch.setField(new MatchField(MatchType.TP_SRC, dport));
+                        smatch.setField(new MatchField(MatchType.NW_PROTO, (byte)0x11));
+                	}
+            	}
 
-                NodeConnector lastLocalNode = null;
                 if(!snode.equals(dnode)){
                 	Path go = getshortPath(snode, dnode);
+//                	for (Edge edge : go.getEdges()) {
+//                		NodeConnector sec = edge.getTailNodeConnector();
+//                		Node hnode = sec.getNode();
+//                		List<Action> acts = new ArrayList<Action>(1);
+//                		acts.add(new Output(sec));
+//                		installFlow("LoadBalance", new Flow(smatch.clone(), acts), hnode);
+//                	}
+//                	
+//                	for (Edge edge : go.getEdges()) {
+//                		NodeConnector sec = edge.getHeadNodeConnector();
+//                		Node hnode = sec.getNode();
+//                		List<Action> acts = new ArrayList<Action>(1);
+//                		acts.add(new Output(sec));
+//                		installFlow("LoadBalance", new Flow(dmatch.clone(), acts), hnode);
+//                	}
                 	List<Edge> list = go.getEdges();
-                	System.out.println(go);
-                	for (int i = 0; i < list.size(); ++i) {
-                		Edge edge = list.get(i);
+                	if ( list.size() != 0 ) {
+                    	Edge edge = list.get(0);
                 		NodeConnector sec = edge.getTailNodeConnector();
-                		NodeConnector dst = edge.getHeadNodeConnector();
-//                		if ( this.connectionManager != null ) {
-                			Node hnode = sec.getNode();
-                			Node knode = dst.getNode();
-                			List<Action> acts1 = new ArrayList<Action>(1);
-                			acts1.add(new Output(sec));
-                			installFlow("LoadBalance", new Flow(smatch.clone(), acts1), hnode);
-                			List<Action> acts2 = new ArrayList<Action>(1);
-                			acts2.add(new Output(dst));
-                			installFlow("LoadBalance", new Flow(dmatch.clone(), acts2), knode);
-                			lastLocalNode = sec;
-//                        }
+                		Node hnode = sec.getNode();
+                		List<Action> acts = new ArrayList<Action>(1);
+                		acts.add(new Output(sec));
+                		installFlow("LoadBalance", new Flow(smatch.clone(), acts), hnode);
                 	}
                 }
-                
-                if ( lastLocalNode != null ) {
-                    List<Action> acts = new ArrayList<Action>(1); // bug.
-                    acts.add(new SetDlDst(host.getDataLayerAddressBytes()));
-                    installFlow("LoadBalance", new Flow(smatch.clone(), acts), lastLocalNode.getNode());
-                }
+//                else {
+                	List<Action> acts = new ArrayList<Action>(1);
+                	acts.add(new SetDlDst(host.getDataLayerAddressBytes()));
+                	installFlow("LoadBalance", new Flow(smatch.clone(), acts), dnode);
+//                }
+//                	acts = new ArrayList<Action>(2);
+//                	acts.add(new SetDlDst(hostTracker.hostFind(sIP).getDataLayerAddressBytes()));
+//                	acts.add(new Output(incoming_connector));
+//                	installFlow("multi", new Flow(dmatch.clone(), acts), snode);
 
                 RawPacket rp = this.dataPacketService.encodeDataPacket(ipv4.getParent());
-                rp.setOutgoingNodeConnector(lastLocalNode);
+                rp.setOutgoingNodeConnector(incoming_connector);
+//                rp.setOutgoingNodeConnector(host.getnodeConnector());
                 this.dataPacketService.transmitDataPacket(rp);
                 return PacketResult.KEEP_PROCESSING;
             }
@@ -267,10 +291,12 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
     }
     
     public static int getNumbersOfPacketIn() { // Maybe concurrency happens, but the effect of this is small.
+//    	return numsOfPacketIn;
     	return numsOfPacketIn.get();
     }
     
     public static int getAndClearPacketIn() {
+//    	return numsOfPacketIn;
     	return numsOfPacketIn.getAndSet(0);
     }
     
@@ -287,6 +313,10 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
     	System.out.println(LoadCollection.getRtt());
     }
     
+    public void _lct(CommandInterpreter ci) {
+    	System.out.println(LoadCollection.getNumbersOfPacketIn());
+    }
+
     public static Map<Long, Long> getRtt() {
     	Map<Long, Long> rttMap = new HashMap<Long, Long>();
     	if ( switches == null || switches.size() == 0) {
@@ -542,7 +572,7 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
   	    long endTime=System.nanoTime();
   	    System.out.println("Process Time:"+(endTime-startTime)+"ns");
     }
-
+    
     private static void property() throws UnknownHostException { 
         Runtime r = Runtime.getRuntime(); 
         Properties props = System.getProperties(); 

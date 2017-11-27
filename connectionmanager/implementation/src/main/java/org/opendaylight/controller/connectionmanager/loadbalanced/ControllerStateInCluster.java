@@ -45,7 +45,7 @@ public class ControllerStateInCluster implements Serializable {
 	public String toString() {
 		return "ControllerStateInCluster [packetInAvailable="
 				+ packetInAvailable + ", rtt=" + rtt + ", timeStamp="
-				+ timeStamp + ", state=" + state + "]";
+				+ timeStamp + ", state=" + state + "]\n";
 	}
 
 }
