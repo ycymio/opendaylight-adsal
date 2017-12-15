@@ -210,7 +210,6 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
                 HostNodeConnector host = hostTracker.hostFind(dIP);
 
                 Node dnode = host.getnodeconnectorNode();
-                
 
                 Match smatch = new Match();
                 smatch.setField(new MatchField(MatchType.DL_TYPE, EtherTypes.IPv4.shortValue()));
@@ -264,22 +263,28 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
                 		List<Action> acts = new ArrayList<Action>(1);
                 		acts.add(new Output(sec));
                 		installFlow("LoadBalance", new Flow(smatch.clone(), acts), hnode);
+                        RawPacket rp = this.dataPacketService.encodeDataPacket(ipv4.getParent());
+                        // rp.setOutgoingNodeConnector(sec);
+                        rp.setOutgoingNodeConnector(host.getnodeConnector());
+                        this.dataPacketService.transmitDataPacket(rp);
                 	}
                 }
-//                else {
+                else {
                 	List<Action> acts = new ArrayList<Action>(1);
                 	acts.add(new SetDlDst(host.getDataLayerAddressBytes()));
                 	installFlow("LoadBalance", new Flow(smatch.clone(), acts), dnode);
-//                }
+                    RawPacket rp = this.dataPacketService.encodeDataPacket(ipv4.getParent());
+                    rp.setOutgoingNodeConnector(host.getnodeConnector());
+                    this.dataPacketService.transmitDataPacket(rp);
+                }
 //                	acts = new ArrayList<Action>(2);
 //                	acts.add(new SetDlDst(hostTracker.hostFind(sIP).getDataLayerAddressBytes()));
 //                	acts.add(new Output(incoming_connector));
 //                	installFlow("multi", new Flow(dmatch.clone(), acts), snode);
 
-                RawPacket rp = this.dataPacketService.encodeDataPacket(ipv4.getParent());
-                rp.setOutgoingNodeConnector(incoming_connector);
+//                RawPacket rp = this.dataPacketService.encodeDataPacket(ipv4.getParent());
+//                rp.setOutgoingNodeConnector(incoming_connector);
 //                rp.setOutgoingNodeConnector(host.getnodeConnector());
-                this.dataPacketService.transmitDataPacket(rp);
                 return PacketResult.KEEP_PROCESSING;
             }
             finally {

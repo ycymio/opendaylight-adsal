@@ -5,12 +5,12 @@ import java.util.Map;
 
 public class ControllerStateInCluster implements Serializable {
 	private static final long serialVersionUID = -2951885851207432553L;
-	private long packetInAvailable;
+	private double packetInAvailable;
 	private Map<Long, Long> rtt;
 	private long timeStamp; // minimal interval between migration
 	private ControllerLocalState state;
 	
-	public ControllerStateInCluster(long packetIns, Map<Long, Long> rtt, ControllerLocalState state) {
+	public ControllerStateInCluster(double packetIns, Map<Long, Long> rtt, ControllerLocalState state) {
 		this.packetInAvailable = packetIns;
 		this.rtt = rtt;
 		timeStamp = 0L;
@@ -25,7 +25,7 @@ public class ControllerStateInCluster implements Serializable {
 		this.timeStamp = timeStamp;
 	}
 
-	public long getPacketInAvailable() {
+	public double getPacketInAvailable() {
 		return packetInAvailable;
 	}
 

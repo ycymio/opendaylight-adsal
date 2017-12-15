@@ -67,9 +67,9 @@ public class LoadBalancedScheme extends AbstractScheme {
 	private static final int CONTROLLER_STATE_UPDATE_INTERVAL = 1;
 	private static final int CONTROLLER_STATE_CHECK_INTERVAL = 1;
 	private static final int MIGRATION_INTERVAL = 120;
-	private static final int STATE_HISTORY_SIZE = 10;
+	private static final int STATE_HISTORY_SIZE = 10; // >= 2
 	
-	private static ControllerState stardard = null;
+	private static ControllerState state_standard = null;
 	
 	// TODO: save all the properties in a cluster database.
 	private static int packetin_lower_limit = 1;
@@ -90,9 +90,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 //    protected static ConcurrentMap<InetAddress, Set<Node>> migrationLock;
     private static Map<Node, LinkedList<Integer>> loadMap = null;
     private ControllerState determinedState = null;
-    private Sigar sigar = null; 
-    
-    
+    private Sigar sigar = null;
 
     public static AbstractScheme getScheme(IClusterGlobalServices clusterServices) {
         if (myScheme == null) {
@@ -113,7 +111,7 @@ public class LoadBalancedScheme extends AbstractScheme {
             stateHistory = new LinkedList<ControllerState>();
             
             // TODO: stardard. can modify.
-            stardard = new ControllerState(0.1d, 100L << 20, 1, 0, 600*1000000L, null);
+            state_standard = new ControllerState(0.1d, 100L << 20, 1, 0, 600*1000000L, null);
         	startScheduledService();
         }
         sigar = new Sigar();
@@ -231,78 +229,9 @@ public class LoadBalancedScheme extends AbstractScheme {
         }
         return result;
     }
-    
-    public Status updateNodeWithoutConstraint (Node node, InetAddress controller) {
-        if (node == null || controller == null) {
-            return new Status(StatusCode.BADREQUEST, "Invalid Node or Controller Address Specified.");
-        }
-
-        if (clusterServices == null || nodeConnections == null) {
-            return new Status(StatusCode.SUCCESS);
-        }
-        log.debug("Trying to Put {} to {}", controller.getHostAddress(), node.toString());
-
-        Set<InetAddress> oldControllers = nodeConnections.get(node);
-        if ( oldControllers != null && oldControllers.contains(controller) ) {
-        	return new Status(StatusCode.NOSERVICE, "The master controller is not changed");
-        }
-        if ( oldControllers != null && oldControllers.size() > 1 ) {
-        	return new Status(StatusCode.FORBIDDEN, "The size of master is more than one");
-        }
-        
-        Set<InetAddress> newControllers = new HashSet<InetAddress>();
-        
-        if (newControllers.add(controller)) { // true -> controller exists
-             try {
-                 clusterServices.tbegin();
-                 if ( oldControllers != null ) {
-                	 if (!nodeConnections.replace(node, oldControllers, newControllers)) {
-                		 clusterServices.trollback();
-     					 log.debug("Retrying ... {} with {}",
-    							controller.getHostAddress(), node.toString());
-                		 try {
-                			 Thread.sleep(100);
-                		 } catch ( InterruptedException e) {}
-                         return updateNodeWithoutConstraint(node, controller);
-                     }
-                	 else {
-     					log.info(
-     							"Replace successful old={} with new={} for {} to {}",
-     							oldControllers.toString(),
-     							newControllers.toString(),
-     							controller.getHostAddress(), node.toString());
-                	 }
-                 }
-                 else {
-                	 if (nodeConnections.putIfAbsent(node, newControllers) != null) {
-                		 clusterServices.trollback();
-     					 log.trace("Retrying ... {} with {}",
-    							controller.getHostAddress(), node.toString());
-                		 try {
-                			 Thread.sleep(100);
-                		 } catch ( InterruptedException e) {}
-                		 return updateNodeWithoutConstraint(node, controller);
-                	 }
-                	 else {
-         				log.trace("Added {} to {}", controller.getHostAddress(), node.toString());
-                	 }
-                 }
-                 clusterServices.tcommit();
-             } catch (Exception e) {
-                log.error("Exception in removing Controller from a Node", e);
-                try {
-                   clusterServices.trollback();
-                } catch (Exception e1) {
-                    log.error("Error Rolling back the node Connections Changes ", e);
-                }
-                return new Status(StatusCode.INTERNALERROR);
-            }
-        }
-        return new Status(StatusCode.SUCCESS);
-    }
 
     public void stopScheduledTask() {
-//    	scheduledService.shutdown();
+    	scheduledService.shutdown();
     }
     
     // TODO: load balance in the beginning.
@@ -310,9 +239,6 @@ public class LoadBalancedScheme extends AbstractScheme {
     public boolean isConnectionAllowedInternal(Node node) {
         Set <InetAddress> controllers = nodeConnections.get(node);
         ControllerStateInCluster csic = controllerState.get(clusterServices.getMyAddress());
-        if ( csic == null ) {
-        	// TODO: ??
-        }
         if ( csic != null && csic.getState() == ControllerLocalState.HIBERNATE ) {
         	return false;
         }
@@ -362,6 +288,8 @@ public class LoadBalancedScheme extends AbstractScheme {
                 } 
                 NetInterfaceStat ifstat = sigar.getNetInterfaceStat(name); 
                 netErrors += ifstat.getRxErrors() + ifstat.getTxErrors() + ifstat.getRxDropped() + ifstat.getTxDropped();
+//                netRate = ifstat.getRxBytes() + ifstat.getTxBytes() - 
+                		
             }
 //            int packetIns = 0;
             int packetIns = LoadCollection.getAndClearPacketIn();
@@ -374,7 +302,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 	        while (entries.hasNext()) {
 	        	Map.Entry<Node, AtomicInteger> entry = entries.next();
 	        	Node node = entry.getKey();
-	        	int load = entry.getValue().get();
+	        	int load = (int)Math.ceil((double)(entry.getValue().get())/CONTROLLER_STATE_UPDATE_INTERVAL);
 	        	LinkedList<Integer> list = loadMap.get(node);
 	        	if ( list == null ) {
 	        		list = new LinkedList<Integer>();
@@ -479,7 +407,7 @@ public class LoadBalancedScheme extends AbstractScheme {
     	determinedState = new ControllerState(averageCpuLeft/stateHistory.size(), last.getMemLeft(), last.getNetErrors() - historyError,
     			averagePacketIns/stateHistory.size(), averageProcessTime, last.getRtt());
 		// ControllerState upperLimit = stardard;
-    	long available = maxPacketIns - (int)averagePacketIns/stateHistory.size();
+    	double available = maxPacketIns - averagePacketIns/stateHistory.size();
     	return new ControllerStateInCluster(available, last.getRtt(), checkLocalState());
     }
 
@@ -564,7 +492,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 					checkControllerState();
 					return;
 				}
-				migrateFitSwitch(true, 0);
+				migrateFitSwitch(true, 0); // hibernate+migrate failed???
 				log.info("[check controller state]: the controller {} is closed", address);
 			}
 		}
@@ -577,7 +505,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 	 */
 	private ControllerLocalState checkLocalState() {
 		ControllerState cs = determinedState;
-		ControllerState upperLimit = stardard;
+		ControllerState upperLimit = state_standard;
 		if ( cs.getCpuLeft() < upperLimit.getCpuLeft() || cs.getMemLeft() < upperLimit.getMemLeft() || cs.getNetErrors() >= upperLimit.getNetErrors()
 				|| cs.getProcessTime() >= upperLimit.getProcessTime()) {
 			return ControllerLocalState.BUSY;
@@ -618,15 +546,15 @@ public class LoadBalancedScheme extends AbstractScheme {
 	 * @return true: common, false: busy/idle.
 	 */
 	private boolean checkClusterLoad(boolean isUpper) {
+		int countBusy = calculateCountOfState(ControllerLocalState.BUSY);
 		if ( isUpper ) {
-			int count = calculateCountOfState(ControllerLocalState.BUSY);
-	        if ( count > this.getWorkingControllers().size() * cluster_busy_ratio) {
+	        if ( countBusy > (controllerState.size() - calculateCountOfState(ControllerLocalState.HIBERNATE)) * cluster_busy_ratio) {
 	        	return false;
 	        }
 		}
 		else {
 			int count = calculateCountOfState(ControllerLocalState.IDLE);
-	        if ( count > this.getWorkingControllers().size() * cluster_idle_ratio) {
+	        if ( countBusy == 0 && count >  (controllerState.size() - calculateCountOfState(ControllerLocalState.HIBERNATE)) * cluster_idle_ratio) {
 	        	return false;
 	        }
 		}
@@ -644,7 +572,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 	
 
 	private boolean hibernateCurrentController() {
-		Status status = setControllerState(null, ControllerLocalState.HIBERNATE);
+		Status status = setControllerState( ControllerLocalState.IDLE, ControllerLocalState.HIBERNATE);
 		if ( status.isSuccess()) {
 			return true;
 		}
@@ -768,7 +696,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 		LinkedList<Node> list = new LinkedList<Node>(migratingPart);
 		while ( list.size() > 0 ) {
 			ControllerForSort cfs = controllerForSort.get(0);
-			long val = cfs.getNumber();
+			double val = cfs.getNumber();
 			Node node = list.peek();
 			int sfl = statisticsForLoad.get(node);
 			if ( needMigrateAll && val < sfl) {
@@ -873,22 +801,22 @@ public class LoadBalancedScheme extends AbstractScheme {
 	}
 	
 	class ControllerForSort implements Comparable<ControllerForSort>{
-		long number;
+		double number;
 		InetAddress addr;
 		
-		public long getNumber() {
+		public double getNumber() {
 			return number;
 		}
 		public InetAddress getAddr() {
 			return addr;
 		}
-		public ControllerForSort(long num, InetAddress addr) {
+		public ControllerForSort(double num, InetAddress addr) {
 			this.number = num;
 			this.addr = addr;
 		}
 	    @Override  
 	    public int compareTo(ControllerForSort s) {  
-	    	long i = s.getNumber() - this.getNumber();
+	    	double i = s.getNumber() - this.getNumber();
 	    	if ( i < 0 ) {
 	    		return -1;
 	    	}

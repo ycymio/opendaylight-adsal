@@ -43,7 +43,7 @@ public class MessageReadWriteService implements IMessageReadWrite {
         this.socket = socket;
         this.selector = selector;
         this.factory = new BasicFactory();
-        this.inBuffer = ByteBuffer.allocateDirect(bufferSize*30);
+        this.inBuffer = ByteBuffer.allocateDirect(bufferSize);
         this.outBuffer = ByteBuffer.allocateDirect(bufferSize);
         this.clientSelectionKey = this.socket.register(this.selector,
                 SelectionKey.OP_READ);
