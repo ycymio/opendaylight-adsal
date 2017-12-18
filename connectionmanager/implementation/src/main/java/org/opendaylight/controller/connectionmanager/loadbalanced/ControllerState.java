@@ -6,14 +6,18 @@ public class ControllerState {
 	private double cpuLeft;
 	private long memLeft;
 	private long netErrors;
+	private long netRxByte;
+	private long netTxByte;
 	private double packetIns;
 	private long processTime;
 	private Map<Long, Long> rtt;
 	
-	public ControllerState(double cpu, long mem, long net, double packets, long pt, Map<Long, Long> rtt){
+	public ControllerState(double cpu, long mem, long net, long netRxByte, long netTxByte, double packets, long pt, Map<Long, Long> rtt){
 		this.cpuLeft = cpu;
 		this.memLeft = mem;
 		this.netErrors = net;
+		this.netRxByte = netRxByte;
+		this.netTxByte = netTxByte;
 		this.packetIns = packets;
 		this.processTime = pt;
 		this.rtt = rtt;
@@ -41,6 +45,14 @@ public class ControllerState {
 
 	public Map<Long, Long> getRtt() {
 		return rtt;
+	}
+	
+	public long getNetRxByte() {
+		return netRxByte;
+	}
+
+	public long getNetTxByte() {
+		return netTxByte;
 	}
 
 	@Override

@@ -86,8 +86,6 @@ public class LoadBalancedScheme extends AbstractScheme {
     
     private final String controllerStateCacheName;
     protected static ConcurrentMap<InetAddress, ControllerStateInCluster> controllerState;
-//    private final String migrationLockName;
-//    protected static ConcurrentMap<InetAddress, Set<Node>> migrationLock;
     private static Map<Node, LinkedList<Integer>> loadMap = null;
     private ControllerState determinedState = null;
     private Sigar sigar = null;
@@ -111,7 +109,7 @@ public class LoadBalancedScheme extends AbstractScheme {
             stateHistory = new LinkedList<ControllerState>();
             
             // TODO: stardard. can modify.
-            state_standard = new ControllerState(0.1d, 100L << 20, 1, 0, 600*1000000L, null);
+            state_standard = new ControllerState(0.1d, 100L << 20, 1, 0, 0, 0, 600*1000000L, null);
         	startScheduledService();
         }
         sigar = new Sigar();
@@ -272,6 +270,8 @@ public class LoadBalancedScheme extends AbstractScheme {
             String[] array = provisions.split(";");
             Set<String> provision = new HashSet<String>();
             long netErrors = 0L;
+            long netRx = 0L;
+            long netTx = 0L;
             for( String str: array) {
             	provision.add(str);
             }
@@ -288,6 +288,8 @@ public class LoadBalancedScheme extends AbstractScheme {
                 } 
                 NetInterfaceStat ifstat = sigar.getNetInterfaceStat(name); 
                 netErrors += ifstat.getRxErrors() + ifstat.getTxErrors() + ifstat.getRxDropped() + ifstat.getTxDropped();
+                netRx = ifstat.getRxBytes();
+                netTx = ifstat.getTxBytes();
 //                netRate = ifstat.getRxBytes() + ifstat.getTxBytes() - 
                 		
             }
@@ -317,9 +319,14 @@ public class LoadBalancedScheme extends AbstractScheme {
             // calculate 
 //	        long netErrorBefore = (stateHistory.size() > 0) ? stateHistory.peekLast().getNetErrors(): 0L;
             ControllerState cs = new ControllerState(1.0 - cpuUsage, sigar.getMem().getFree(), 
-            		netErrors, (double)packetIns/CONTROLLER_STATE_UPDATE_INTERVAL,
+            		netErrors, netRx, netTx, (double)packetIns/CONTROLLER_STATE_UPDATE_INTERVAL,
             		processTime, LoadCollection.getRtt());
-            log.info("Collect: {} {} {} {} {} {}", cpuUsage, sigar.getMem().getTotal(), cs.getNetErrors(), cs.getPacketIns(), processTime);
+            if ( stateHistory.size() > 1 ) {
+            	ControllerState last = stateHistory.peekLast();
+                log.info("Collect:,{},{},{},{},{},{},{},{}", cpuUsage, sigar.getMem().getTotal(), cs.getNetErrors()-last.getNetErrors(),
+                		(cs.getNetRxByte()-last.getNetRxByte())/CONTROLLER_STATE_UPDATE_INTERVAL, (cs.getNetTxByte()-last.getNetTxByte())/CONTROLLER_STATE_UPDATE_INTERVAL,
+                		cs.getPacketIns(), processTime);
+            }
             while ( stateHistory.size() >= STATE_HISTORY_SIZE ) {
             	stateHistory.pollFirst();
             }
@@ -342,6 +349,9 @@ public class LoadBalancedScheme extends AbstractScheme {
         
         ControllerStateInCluster oldState = controllerState.get(address);
     	ControllerStateInCluster csic = calculatePacketInAvailable();
+    	if ( csic == null ) {
+    		return;
+    	}
         try {
             clusterServices.tbegin();
             if ( oldState != null ) {
@@ -402,13 +412,18 @@ public class LoadBalancedScheme extends AbstractScheme {
     		averageCpuLeft += state.getCpuLeft();
     		averagePacketIns += state.getPacketIns();
     	}
-    	long historyError = ( stateHistory.size() > 2 ) ? stateHistory.get(stateHistory.size()-2).getNetErrors(): 0;
-
-    	determinedState = new ControllerState(averageCpuLeft/stateHistory.size(), last.getMemLeft(), last.getNetErrors() - historyError,
-    			averagePacketIns/stateHistory.size(), averageProcessTime, last.getRtt());
-		// ControllerState upperLimit = stardard;
-    	double available = maxPacketIns - averagePacketIns/stateHistory.size();
-    	return new ControllerStateInCluster(available, last.getRtt(), checkLocalState());
+    	if ( stateHistory.size() > 2 ) {
+    		ControllerState penult = stateHistory.get(stateHistory.size()-2);
+        	determinedState = new ControllerState(averageCpuLeft/stateHistory.size(), last.getMemLeft(),
+        			last.getNetErrors() - penult.getNetErrors(),
+        			last.getNetRxByte() - penult.getNetRxByte(),
+        			last.getNetTxByte() - penult.getNetTxByte(),
+        			averagePacketIns/stateHistory.size(), averageProcessTime, last.getRtt());
+    		// ControllerState upperLimit = stardard;
+        	double available = maxPacketIns - averagePacketIns/stateHistory.size();
+        	return new ControllerStateInCluster(available, last.getRtt(), checkLocalState());
+    	}
+    	return null;
     }
 
 	private void checkControllerState() {
@@ -601,6 +616,9 @@ public class LoadBalancedScheme extends AbstractScheme {
         ControllerStateInCluster csic = oldState != null ? 
         		new ControllerStateInCluster(oldState.getPacketInAvailable(), oldState.getRtt(), newState):
         		calculatePacketInAvailable();
+        if ( csic == null ) {
+        	return new Status(StatusCode.INTERNALERROR, "The controller just began. The operation needs to delay");
+        }
     	csic.setTimeStamp(System.currentTimeMillis());
         try {
             clusterServices.tbegin();
