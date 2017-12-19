@@ -12,8 +12,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -85,6 +83,7 @@ public class LoadBalancedScheme extends AbstractScheme {
     private static long maxPacketIns = 300L;
     
     private final String controllerStateCacheName;
+    private final String weightCacheName;
     protected static ConcurrentMap<InetAddress, ControllerStateInCluster> controllerState;
     private static Map<Node, LinkedList<Integer>> loadMap = null;
     private ControllerState determinedState = null;
@@ -101,6 +100,7 @@ public class LoadBalancedScheme extends AbstractScheme {
         super(clusterServices, ConnectionMgmtScheme.LOAD_BALANCED);
         log.info("java.library.path is {}", System.getProperty("java.library.path"));
         controllerStateCacheName = "connectionmanager.load_balanced.controllerstate";
+        weightCacheName = "connectionmanager.load_balanced.weight";
 //        migrationLockName = "connectionmanager.load_balanced.migrationlock";
         // some cache operations here
         if ( clusterServices != null ) {
@@ -114,6 +114,20 @@ public class LoadBalancedScheme extends AbstractScheme {
         }
         sigar = new Sigar();
         loadMap = new HashMap<Node, LinkedList<Integer>>();
+    }
+    
+    public void stop() {
+    	scheduledService.shutdown();
+    	scheduledServiceForCheck.shutdown();
+    	if ( clusterServices != null) {
+    		InetAddress address = clusterServices.getMyAddress();
+    		if(!deleteStateFromClusterDatabase(address)){
+    			log.error("delete state from cluster database error.");
+    		}
+    		if(!deleteWeightFromClusterDatabase(address)){
+    			log.error("delete weight from cluster database error.");
+    		}   		
+    	}
     }
     
     private void startScheduledService() {
@@ -152,6 +166,7 @@ public class LoadBalancedScheme extends AbstractScheme {
                 	long startTime = System.nanoTime();
                 	if ( controllerState != null) {
                 		collectControllerState();
+                		updateWeight();
                 		updateInClusterService.execute(updateRunnable);
         				Iterator<Map.Entry<InetAddress, ControllerStateInCluster>> entries = controllerState.entrySet().iterator(); 
         		        while (entries.hasNext()) {
@@ -182,6 +197,7 @@ public class LoadBalancedScheme extends AbstractScheme {
         }
         try {
             clusterServices.createCache(controllerStateCacheName, EnumSet.of(IClusterServices.cacheMode.TRANSACTIONAL));
+            clusterServices.createCache(weightCacheName, EnumSet.of(IClusterServices.cacheMode.TRANSACTIONAL));
 //            clusterServices.createCache(migrationLockName, EnumSet.of(IClusterServices.cacheMode.TRANSACTIONAL));
         } catch (CacheExistException cee) {
             log.debug("\nCache already exists: {} || {}", controllerStateCacheName);
@@ -192,16 +208,26 @@ public class LoadBalancedScheme extends AbstractScheme {
         }
     }
     
-    @SuppressWarnings({ "unchecked" })
-    private void retrieveCachesInLB() {
+
+    @SuppressWarnings("unchecked")
+	private void retrieveCachesInLB() {
         if (this.clusterServices == null) {
             log.error("Un-initialized Cluster Services, can't retrieve caches for scheme: load_balance.");
             return;
         }
         controllerState = (ConcurrentMap<InetAddress, ControllerStateInCluster>) clusterServices.getCache(controllerStateCacheName);
-//        migrationLock = (ConcurrentMap<InetAddress, Set<Node>>) clusterServices.getCache(migrationLockName);
+        weightCache = (ConcurrentMap<InetAddress, Integer>) clusterServices.getCache(weightCacheName);
         if (nodeConnections == null) {
             log.error("\nFailed to get cache: {}", controllerStateCacheName);
+        }
+        if (weightCache == null) {
+            log.error("\nFailed to get cache: {}", weightCacheName);
+        }
+        else {
+        	int times = 0;
+        	while( !setCurrentWeight(currentWeight) && times < 5){
+        		++times;
+        	}
         }
     }
 
@@ -323,7 +349,7 @@ public class LoadBalancedScheme extends AbstractScheme {
             		processTime, LoadCollection.getRtt());
             if ( stateHistory.size() > 1 ) {
             	ControllerState last = stateHistory.peekLast();
-                log.info("Collect:,{},{},{},{},{},{},{},{}", cpuUsage, sigar.getMem().getTotal(), cs.getNetErrors()-last.getNetErrors(),
+                log.error("Collect:,{},{},{},{},{},{},{},{}", cpuUsage, sigar.getMem().getTotal(), cs.getNetErrors()-last.getNetErrors(),
                 		(cs.getNetRxByte()-last.getNetRxByte())/CONTROLLER_STATE_UPDATE_INTERVAL, (cs.getNetTxByte()-last.getNetTxByte())/CONTROLLER_STATE_UPDATE_INTERVAL,
                 		cs.getPacketIns(), processTime);
             }
@@ -578,7 +604,8 @@ public class LoadBalancedScheme extends AbstractScheme {
 
 	private boolean registerNewController(InetAddress newController) {
 		Status status = setControllerState(ControllerLocalState.HIBERNATE, ControllerLocalState.NORMAL);
-		if ( status.isSuccess()) {
+		if ( status.isSuccess() ) {
+			setCurrentWeight(this.currentWeight);
 			return true;
 		}
 		log.warn("[register New Controller]: " + status.getDescription());
@@ -588,7 +615,8 @@ public class LoadBalancedScheme extends AbstractScheme {
 
 	private boolean hibernateCurrentController() {
 		Status status = setControllerState( ControllerLocalState.IDLE, ControllerLocalState.HIBERNATE);
-		if ( status.isSuccess()) {
+		if ( status.isSuccess() && clusterServices != null) {
+			deleteWeightFromClusterDatabase(clusterServices.getMyAddress());
 			return true;
 		}
 		log.warn("[hibernate current Controller]: " +  status.getDescription());
@@ -850,6 +878,161 @@ public class LoadBalancedScheme extends AbstractScheme {
 		return 0;
 	}
 	
+	@Override
+	protected boolean loadBalancing(Node node) {
+		Long val = (Long)node.getID();
+		boolean result = isInitialMaster(val);
+		System.out.println("->>" + node + ":" + result);
+		return result;
+	}
+
+    private ConcurrentMap<InetAddress, Integer> weightCache = null;
+    private int currentWeight = 2;
+    private int weightSum = 0;
+    private int weightLower = 0;
+
+    public ConcurrentMap<InetAddress, Integer> getWeightCache() {
+    	return new ConcurrentHashMap<InetAddress, Integer>(weightCache);
+    }
+
+    public boolean setCurrentWeight(int val) {
+    	try {
+            if (clusterServices == null || weightCache == null ) {
+                log.warn("Cluster service unavailable, or controller weight info missing.");
+            }
+        	InetAddress myAddress = clusterServices.getMyAddress();
+            clusterServices.tbegin();
+            if (weightCache.putIfAbsent(myAddress, val) != null) {
+            	if ( weightCache.replace(myAddress, val) == null) {
+            		clusterServices.trollback();
+            		try {
+            			Thread.sleep(100);
+            		} catch ( InterruptedException e) {}
+            		log.trace("Retrying ... {} with {}", myAddress.toString(), val);
+            		return false;
+            	}
+            }
+            clusterServices.tcommit();
+            currentWeight = val;
+            return true;
+        } catch (Exception e) {
+            log.error("Excepion in changing Controller weight", e);
+            try {
+                clusterServices.trollback();
+            } catch (Exception e1) {
+                log.error("Error Rolling back the controller weight Changes ", e);
+            }
+            return false;
+        }
+    }
+
+    private boolean isInitialMaster(long val) {
+        int tmpVal = (int)(val%weightSum);
+        if ( tmpVal == 0 ) {
+        	tmpVal = weightSum;
+        }
+        if ( tmpVal > weightLower && tmpVal <= weightLower + currentWeight) {
+        	return true;
+        }
+    	return false;
+    }
+    
+    public void handleClusterViewChangedForLC(){
+        log.debug("Handling Cluster View changed notification");
+        List<InetAddress> controllers = clusterServices.getClusteredControllers();
+        List<InetAddress> toRemove = new ArrayList<InetAddress>();
+        for (InetAddress c : controllerState.keySet()) {
+            if (!controllers.contains(c)) {
+                toRemove.add(c);
+            }
+        }
+        toRemove.removeAll(controllers);
+    	System.out.println(toRemove);
+
+        for (InetAddress c : toRemove) {        	
+            log.debug("Removing Controller Information : {} from the cluster database", c);
+            for ( InetAddress addr: toRemove) {
+            	deleteStateFromClusterDatabase(addr);
+            	deleteWeightFromClusterDatabase(addr);
+            }
+        }
+        updateWeight();
+    }
+    
+    public void updateWeight() {
+    	int lower = 0;
+    	int sum = 0;
+		Iterator<Entry<InetAddress, Integer>> entries = weightCache.entrySet().iterator();    
+        while (entries.hasNext()) {
+        	Entry<InetAddress, Integer> entry = entries.next();
+        	InetAddress address = entry.getKey();
+        	InetAddress myAddress = clusterServices.getMyAddress();
+        	if ( address.toString().compareTo(myAddress.toString()) < 0 ) {
+        		lower += entry.getValue();
+        	}
+        	sum += entry.getValue();
+        }
+        weightSum = sum;
+        weightLower = lower;
+    }
+
+    private boolean deleteStateFromClusterDatabase(InetAddress address){
+        if (clusterServices == null || controllerState == null || address == null) {
+            return true;
+        }
+        ControllerStateInCluster oldRecord = controllerState.get(address);
+        try {
+        	clusterServices.tbegin();
+        	if( !controllerState.remove(address, oldRecord)){
+        		clusterServices.trollback();
+        		try {
+        			Thread.sleep(100);
+        		} 
+        		catch ( InterruptedException e) {}
+        		return deleteStateFromClusterDatabase(address);
+        	}
+        	clusterServices.tcommit();
+        	return true;
+        } catch (Exception e) {
+        	log.error("Exception in removing information of Controller", e);
+        	try {
+        		clusterServices.trollback();
+        	} catch (Exception e1) {
+        		log.error("Error Rolling back the controller information Changes ", e);
+        	}
+        }
+        return false;
+    }
+
+    private boolean deleteWeightFromClusterDatabase(InetAddress address){
+        if (clusterServices == null ||  weightCache == null  || address == null) {
+            return true;
+        }
+        Integer oldWeight = weightCache.get(address);
+
+        try {
+        	clusterServices.tbegin();
+        	if( !weightCache.remove(address, oldWeight)){
+        		clusterServices.trollback();
+        		try {
+        			Thread.sleep(100);
+        		} 
+        		catch ( InterruptedException e) {}
+        		return deleteWeightFromClusterDatabase(address);
+        	}
+        	clusterServices.tcommit();
+        	return true;
+        } catch (Exception e) {
+        	log.error("Exception in removing information of Controller", e);
+        	try {
+        		clusterServices.trollback();
+        	} catch (Exception e1) {
+        		log.error("Error Rolling back the controller information Changes ", e);
+        	}
+        }
+        return false;
+    }
+    
     private static void property() throws UnknownHostException { 
         Runtime r = Runtime.getRuntime(); 
         log.info("JVM total memory:\t" + r.totalMemory()); // <--------

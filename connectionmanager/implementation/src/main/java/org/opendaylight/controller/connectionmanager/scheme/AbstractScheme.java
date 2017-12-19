@@ -294,14 +294,18 @@ public abstract class AbstractScheme {
         if (isLocal(node))  {
             return new Status(StatusCode.SUCCESS);
         }
-        if (isConnectionAllowed(node)) {
+        if (isConnectionAllowed(node) && loadBalancing(node)) {
             return putNodeToController(node, controller);
         } else {
             return new Status(StatusCode.NOTALLOWED);
         }
     }
 
-    public Status addNode (Node node) {
+    protected boolean loadBalancing(Node node) {
+		return true;
+	}
+
+	public Status addNode (Node node) {
         return addNode(node, clusterServices.getMyAddress());
     }
 

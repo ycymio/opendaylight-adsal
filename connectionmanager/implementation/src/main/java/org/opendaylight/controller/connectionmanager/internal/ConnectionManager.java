@@ -23,8 +23,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -165,7 +167,14 @@ public class ConnectionManager implements IConnectionManager,
                 if (scheme != null)
                     scheme.removeNode(localNode);
             }
+        	if ( scheme instanceof LoadBalancedScheme) {
+        		((LoadBalancedScheme)scheme).stop();
+        	}
         }
+        AbstractScheme scheme = schemes.get(activeScheme);
+    	if ( scheme instanceof LoadBalancedScheme) {
+    		((LoadBalancedScheme)scheme).stop();
+    	}
     }
 
     @Override
@@ -358,7 +367,6 @@ public class ConnectionManager implements IConnectionManager,
     private class EventHandler implements Runnable {
         @Override
         public void run() {
-
             while (true) {
                 try {
                     ConnectionMgmtEvent ev = connectionEvents.take();
@@ -373,6 +381,9 @@ public class ConnectionManager implements IConnectionManager,
                         if (scheme == null)
                             return;
                         scheme.handleClusterViewChanged();
+                    	if ( scheme instanceof LoadBalancedScheme) {
+                    		((LoadBalancedScheme)scheme).handleClusterViewChangedForLC();
+                    	}
                         connectionService.notifyClusterViewChanged();
                         break;
                     default:
@@ -463,5 +474,26 @@ public class ConnectionManager implements IConnectionManager,
     public void _test(CommandInterpreter ci) {
 		LoadBalancedScheme.test();
     }
+
+    public void _setLW(CommandInterpreter ci) {
+        String nextWeight = ci.nextArgument();
+        AbstractScheme scheme = schemes.get(activeScheme);
+    	if ( scheme instanceof LoadBalancedScheme) {
+            if (!((LoadBalancedScheme)scheme).setCurrentWeight(Integer.valueOf(nextWeight))) {
+            	ci.println("Set Weight failed.");
+            }
+    	}
+    }
     
+    public void _printLW(CommandInterpreter ci) {
+        AbstractScheme scheme = schemes.get(activeScheme);
+    	if ( scheme instanceof LoadBalancedScheme) {
+			Iterator<Entry<InetAddress, Integer>> entries = ((LoadBalancedScheme)scheme).getWeightCache().entrySet().iterator();    
+	        while (entries.hasNext()) {
+	        	Entry<InetAddress, Integer> entry = entries.next();
+	        	ci.print(entry.getKey() + ": " + entry.getValue() + "; ");
+	        }
+    	}
+    	ci.println();
+    }
 }
