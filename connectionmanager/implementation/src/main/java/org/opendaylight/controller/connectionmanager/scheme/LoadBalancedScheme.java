@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -64,22 +65,22 @@ public class LoadBalancedScheme extends AbstractScheme {
 	private static final int INTERNAL_THREAD_START_TIME = 30;
 	private static final int CONTROLLER_STATE_UPDATE_INTERVAL = 1;
 	private static final int CONTROLLER_STATE_CHECK_INTERVAL = 1;
-	private static final int MIGRATION_INTERVAL = 120;
+	private static final long MIGRATION_INTERVAL = CONTROLLER_STATE_CHECK_INTERVAL * 5 * 1000;
 	private static final int STATE_HISTORY_SIZE = 10; // >= 2
 	
 	private static ControllerState state_standard = null;
 	
 	// TODO: save all the properties in a cluster database.
-	private static int packetin_lower_limit = 1;
-	private static float cluster_busy_ratio = 0.9f;
-	private static float cluster_idle_ratio = 0.9f;
+	private static int packetin_lower_limit = 50;
+	private static float cluster_busy_ratio = 0.6f;
+	private static float cluster_idle_ratio = 0.6f;
 	private static long rtt_upper_limit = 100000;
 	
 	private static ScheduledExecutorService scheduledService = null;
 	private static ScheduledExecutorService scheduledServiceForCheck = null;
 	private static ExecutorService updateInClusterService = null;
     private static AbstractScheme myScheme= null;
-    private LinkedList<ControllerState> stateHistory;
+    private ConcurrentLinkedDeque<ControllerState> stateHistory;
     private static long maxPacketIns = 300L;
     
     private final String controllerStateCacheName;
@@ -106,10 +107,10 @@ public class LoadBalancedScheme extends AbstractScheme {
         if ( clusterServices != null ) {
         	allocateCachesInLB();
         	retrieveCachesInLB();
-            stateHistory = new LinkedList<ControllerState>();
-            
+            stateHistory = new ConcurrentLinkedDeque<ControllerState>();
+
             // TODO: stardard. can modify.
-            state_standard = new ControllerState(0.1d, 100L << 20, 1, 0, 0, 0, 600*1000000L, null);
+            state_standard = new ControllerState(0.1d, 10L << 20, 1, 0, 0, 0, 600*1000000L, null);
         	startScheduledService();
         }
         sigar = new Sigar();
@@ -144,19 +145,6 @@ public class LoadBalancedScheme extends AbstractScheme {
         		}
         	}
         };
-        Runnable checkRunnable = new Runnable() {
-        	public void run() {
-        		try {
-            		long startTime = System.nanoTime();
-            		checkControllerState();
-            		long endTime = System.nanoTime();
-            		log.debug("[check controller state] Process Time:"+(endTime-startTime)+"ns");
-        		}
-        		catch (Exception e) {
-        			e.printStackTrace();
-        		}
-        	}
-        };
         updateInClusterService = Executors.newSingleThreadExecutor();
     	// Scheduled Task for Update Load.
         Runnable collectRunnable = new Runnable() {  
@@ -184,9 +172,27 @@ public class LoadBalancedScheme extends AbstractScheme {
         };  
         scheduledService = Executors.newScheduledThreadPool(1); 
         scheduledServiceForCheck = Executors.newScheduledThreadPool(1); 
-        scheduledService.scheduleAtFixedRate(collectRunnable, INTERNAL_THREAD_START_TIME, CONTROLLER_STATE_UPDATE_INTERVAL, TimeUnit.SECONDS);  
+        scheduledService.scheduleAtFixedRate(collectRunnable, INTERNAL_THREAD_START_TIME, CONTROLLER_STATE_UPDATE_INTERVAL, TimeUnit.SECONDS);
+        startCheckTask();
 //        scheduledServiceForCheck = Executors.newSingleThreadScheduledExecutor();
-        scheduledServiceForCheck.scheduleAtFixedRate(checkRunnable, INTERNAL_THREAD_START_TIME + 5, CONTROLLER_STATE_CHECK_INTERVAL, TimeUnit.SECONDS);
+    }
+    
+    public void startCheckTask() {
+        Runnable checkRunnable = new Runnable() {
+        	public void run() {
+        		try {
+            		long startTime = System.nanoTime();
+            		checkControllerState();
+            		long endTime = System.nanoTime();
+            		log.debug("[check controller state] Process Time:"+(endTime-startTime)+"ns");
+        		}
+        		catch (Exception e) {
+        			e.printStackTrace();
+        		}
+        	}
+        };
+        scheduledServiceForCheck.scheduleAtFixedRate(checkRunnable, INTERNAL_THREAD_START_TIME + 10, CONTROLLER_STATE_CHECK_INTERVAL, TimeUnit.SECONDS);
+
     }
     
     // Initialize cache.
@@ -321,10 +327,11 @@ public class LoadBalancedScheme extends AbstractScheme {
             }
 //            int packetIns = 0;
             int packetIns = LoadCollection.getAndClearPacketIn();
+            System.out.println(packetIns);
             long processTime = LoadCollection.getAndClearProcessTime();
             processTime = ( packetIns == 0 ) ? 0L :processTime/packetIns;
             // load map.
-            Map<Node, AtomicInteger> rawLoadMap = LoadCollection.getLoadMap();
+            Map<Node, AtomicInteger> rawLoadMap = LoadCollection.getAndRenewLoadMap();
 
 			Iterator<Map.Entry<Node, AtomicInteger>> entries = rawLoadMap.entrySet().iterator();    
 	        while (entries.hasNext()) {
@@ -341,15 +348,21 @@ public class LoadBalancedScheme extends AbstractScheme {
 	        	list.offerLast(load);
         		loadMap.put(node, list);
 	        }
-            
+	        log.info("{}",loadMap);
+
+            Runtime r = Runtime.getRuntime(); 
             // calculate 
 //	        long netErrorBefore = (stateHistory.size() > 0) ? stateHistory.peekLast().getNetErrors(): 0L;
-            ControllerState cs = new ControllerState(1.0 - cpuUsage, sigar.getMem().getFree(), 
+            ControllerState cs = new ControllerState(1.0 - cpuUsage,  r.freeMemory(), 
             		netErrors, netRx, netTx, (double)packetIns/CONTROLLER_STATE_UPDATE_INTERVAL,
             		processTime, LoadCollection.getRtt());
-            if ( stateHistory.size() > 1 ) {
+            if ( stateHistory.size() >= 1 ) {
             	ControllerState last = stateHistory.peekLast();
-                log.error("Collect:,{},{},{},{},{},{},{},{}", cpuUsage, sigar.getMem().getTotal(), cs.getNetErrors()-last.getNetErrors(),
+
+                log.error("Collect:,{},{},{},{},{},{},{},{},{},{},{}", cpuUsage, 
+                		sigar.getMem().getUsed(), sigar.getMem().getFree(),
+                		r.totalMemory(), r.freeMemory(),
+                		cs.getNetErrors()-last.getNetErrors(),
                 		(cs.getNetRxByte()-last.getNetRxByte())/CONTROLLER_STATE_UPDATE_INTERVAL, (cs.getNetTxByte()-last.getNetTxByte())/CONTROLLER_STATE_UPDATE_INTERVAL,
                 		cs.getPacketIns(), processTime);
             }
@@ -439,11 +452,11 @@ public class LoadBalancedScheme extends AbstractScheme {
     		averagePacketIns += state.getPacketIns();
     	}
     	if ( stateHistory.size() > 2 ) {
-    		ControllerState penult = stateHistory.get(stateHistory.size()-2);
+    		ControllerState penult = stateHistory.peekFirst();
         	determinedState = new ControllerState(averageCpuLeft/stateHistory.size(), last.getMemLeft(),
-        			last.getNetErrors() - penult.getNetErrors(),
-        			last.getNetRxByte() - penult.getNetRxByte(),
-        			last.getNetTxByte() - penult.getNetTxByte(),
+        			(last.getNetErrors() - penult.getNetErrors())/(stateHistory.size()-1),
+        			(last.getNetRxByte() - penult.getNetRxByte())/(stateHistory.size()-1),
+        			(last.getNetTxByte() - penult.getNetTxByte())/(stateHistory.size()-1),
         			averagePacketIns/stateHistory.size(), averageProcessTime, last.getRtt());
     		// ControllerState upperLimit = stardard;
         	double available = maxPacketIns - averagePacketIns/stateHistory.size();
@@ -463,14 +476,13 @@ public class LoadBalancedScheme extends AbstractScheme {
     		return;
     	}
     	ControllerLocalState flag = csic.getState();
-    	log.info("[check controller state]: The state of controller is {}", flag.toString());
+    	log.info("[check controller state]: The state of controller is {}", csic.str());
 		if ( flag == ControllerLocalState.HIBERNATE || flag == ControllerLocalState.NORMAL ||  System.currentTimeMillis() - csic.getTimeStamp() < MIGRATION_INTERVAL) {
 			log.debug("[check controller state]: {} does not need to change. {}", address, csic);
 			return ;
 		}
 		if ( flag == ControllerLocalState.BUSY ){
 			// busy.
-			// need to start a new controller?
 			if ( !checkClusterLoad(true) ) {
 				List<InetAddress> remainedController = new ArrayList<InetAddress>();
 				List<String> list = new ArrayList<String>();
@@ -483,14 +495,16 @@ public class LoadBalancedScheme extends AbstractScheme {
 		            }
 		        }
 		        if ( list.size() == 0 ) {
+		        	log.warn("[check controller state]: {}", this.determinedState);
 		        	log.warn("[check controller state]: the cluster needs more sleepy or working controllers.");
+		        	log.warn("-->[check controller state]:{} ", csic.getPacketInAvailable());
 		        	return ;
 		        }
 				Collections.sort(list);
 				String newControllerName = list.get(0);
 				InetAddress newController = null;
 				for( InetAddress addr: remainedController ) {
-					if ( newControllerName == addr.toString() ) {
+					if ( newControllerName.equals(addr.toString()) ) {
 						newController = addr;
 						break;
 					}
@@ -503,7 +517,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 				if (!registerNewController(newController)) {
 					log.error("[check controller state]: {} check state again coz registerring failed.", address);
 					try {
-						Thread.sleep(10);
+						Thread.sleep(100);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 						return;
@@ -512,7 +526,11 @@ public class LoadBalancedScheme extends AbstractScheme {
 					return;
 				}
 			}
-			migrateFitSwitch(false, 0);
+			log.info("{}", getNodes());
+			migrateFitSwitch(false, 0, csic, 0);
+			setControllerState(address, ControllerLocalState.BUSY, ControllerLocalState.NORMAL);
+			stateHistory.clear();
+			log.info("{}", getNodes());
 			// migrating.
 		}
 		else if ( flag == ControllerLocalState.IDLE ){
@@ -533,7 +551,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 					checkControllerState();
 					return;
 				}
-				migrateFitSwitch(true, 0); // hibernate+migrate failed???
+				migrateFitSwitch(true, 0, csic, 0); // hibernate+migrate failed???
 				log.info("[check controller state]: the controller {} is closed", address);
 			}
 		}
@@ -548,13 +566,12 @@ public class LoadBalancedScheme extends AbstractScheme {
 		ControllerState cs = determinedState;
 		ControllerState upperLimit = state_standard;
 		if ( cs.getCpuLeft() < upperLimit.getCpuLeft() || cs.getMemLeft() < upperLimit.getMemLeft() || cs.getNetErrors() >= upperLimit.getNetErrors()
-				|| cs.getProcessTime() >= upperLimit.getProcessTime()) {
+				|| cs.getProcessTime() >= upperLimit.getProcessTime() || cs.getPacketIns() >= LoadBalancedScheme.maxPacketIns) {
 			return ControllerLocalState.BUSY;
 		}
 		else if( cs.getPacketIns() < packetin_lower_limit) {
 			return ControllerLocalState.IDLE;
 		}
-
     	int count = 0;
 		Iterator<Map.Entry<InetAddress, ControllerStateInCluster>> entries = controllerState.entrySet().iterator();    
         while (entries.hasNext()) {
@@ -603,8 +620,9 @@ public class LoadBalancedScheme extends AbstractScheme {
 	}
 
 	private boolean registerNewController(InetAddress newController) {
-		Status status = setControllerState(ControllerLocalState.HIBERNATE, ControllerLocalState.NORMAL);
+		Status status = setControllerState(newController, ControllerLocalState.HIBERNATE, ControllerLocalState.NORMAL);
 		if ( status.isSuccess() ) {
+			log.warn("[register New Controller]: Success");
 			setCurrentWeight(this.currentWeight);
 			return true;
 		}
@@ -614,7 +632,7 @@ public class LoadBalancedScheme extends AbstractScheme {
 	
 
 	private boolean hibernateCurrentController() {
-		Status status = setControllerState( ControllerLocalState.IDLE, ControllerLocalState.HIBERNATE);
+		Status status = setControllerState(clusterServices.getMyAddress(), ControllerLocalState.IDLE, ControllerLocalState.HIBERNATE);
 		if ( status.isSuccess() && clusterServices != null) {
 			deleteWeightFromClusterDatabase(clusterServices.getMyAddress());
 			return true;
@@ -623,30 +641,29 @@ public class LoadBalancedScheme extends AbstractScheme {
 		return false;
 	}
 	
-	private Status setControllerState(ControllerLocalState expectState, ControllerLocalState newState) {
+	private Status setControllerState(InetAddress address, ControllerLocalState expectState, ControllerLocalState newState) {
     	if ( clusterServices == null ) {
             log.error("Un-initialized Cluster Services, can't retrieve caches for scheme: load_balance");
     	}
-    	InetAddress address = clusterServices.getMyAddress();
 
         if ( controllerState == null) {
             log.warn("Cluster service unavailable, or controller state info missing.");
         }
         
         ControllerStateInCluster oldState = controllerState.get(address);
-        log.debug("set Controller State: old={}, expect={}, new={}", oldState, expectState, newState);
+        if ( oldState == null ) {
+        	return new Status(StatusCode.INTERNALERROR, "The old state does not exist");
+        }
+        log.info("set Controller State: old={}, expect={}, new={}", oldState, expectState, newState);
         if ( oldState != null && System.currentTimeMillis() - oldState.getTimeStamp() < MIGRATION_INTERVAL) {
-    		return new Status(StatusCode.CONFLICT, "cannot change current controller's state from " + expectState + " to " + newState + " because of concurrency.");
+    		return new Status(StatusCode.CONFLICT, "cannot change current controller's state from " + expectState + " to " + newState + " because of MIGRATION_INTERVAL.");
         }
         if ( oldState != null &&  expectState != null && expectState != oldState.getState()) {
     		return new Status(StatusCode.CONFLICT, "cannot change current controller's state from " + expectState + " to " + newState + " because of concurrency.");
         }
-        ControllerStateInCluster csic = oldState != null ? 
-        		new ControllerStateInCluster(oldState.getPacketInAvailable(), oldState.getRtt(), newState):
-        		calculatePacketInAvailable();
-        if ( csic == null ) {
-        	return new Status(StatusCode.INTERNALERROR, "The controller just began. The operation needs to delay");
-        }
+        
+        ControllerStateInCluster csic = new ControllerStateInCluster(oldState.getPacketInAvailable(), new HashMap<Long, Long>(oldState.getRtt()), newState);
+        
     	csic.setTimeStamp(System.currentTimeMillis());
         try {
             clusterServices.tbegin();
@@ -674,43 +691,27 @@ public class LoadBalancedScheme extends AbstractScheme {
         }
 		return new Status(StatusCode.SUCCESS);
 	}
-
-	private void migrateFitSwitch(boolean needMigrateAll, int times) {
+	
+	private void migrateFitSwitch(boolean needMigrateAll, int times, ControllerStateInCluster csic, int skip) {
 		// TODO: replaces need new ControllerStateInCluster.
 		// RTT 
 		if ( times > 5 ) {
 			return ;
 		}
-		Set<Node> migratingPart =  null;
+		log.info("migrate fit switch");
+		List<Node> migratingPart = new ArrayList<Node>();
 		Map<Node, Integer> statisticsForLoad = new HashMap<Node, Integer>();
 		if ( needMigrateAll ) {
 			// migrate all switches.
-			migratingPart = getNodes();
-			for( Node node: migratingPart) {
-				List<Integer> list = loadMap.get(node);
-				int number = 0;
-				if ( list != null ) {
-			    	for (Iterator<Integer> iterator = list.iterator(); iterator.hasNext();)
-			    	{
-			    		int val = iterator.next();
-			    		number += val; 
-			    	}
-			    	number /= list.size();
-				}
-				statisticsForLoad.put(node, number);
-			}
-		}
-		else {
-			int needDecreasing = getDecreasedPart();
-			if ( needDecreasing <= 0 ) {
-				return ;
-			}
-			Set<Node> allNodes = getNodes();
+			Set<Node> migratingSet = getNodes();
 			List<StatisticForSort> statistics = new ArrayList<StatisticForSort>();
-			for( Node node: allNodes) {
+			if ( migratingSet == null || migratingSet.size() == 0) {
+				return;
+			}
+			for( Node node: migratingSet) {
 				List<Integer> list = loadMap.get(node);
 				int number = 0;
-				if ( list != null ) {
+				if ( list != null && list.size() != 0) {
 			    	for (Iterator<Integer> iterator = list.iterator(); iterator.hasNext();)
 			    	{
 			    		int val = iterator.next();
@@ -721,11 +722,50 @@ public class LoadBalancedScheme extends AbstractScheme {
 				statistics.add(new StatisticForSort(number, node));
 				statisticsForLoad.put(node, number);
 			}
+			Collections.sort(statistics);
+			for( StatisticForSort stfs: statistics) {
+				migratingPart.add(stfs.getNode());
+			}
+		}
+		else {
+			int needDecreasing = (int)(0 - csic.getPacketInAvailable());
+			List<StatisticForSort> statistics = new ArrayList<StatisticForSort>();
+			if ( needDecreasing <= 0 ) {
+//				if ( csic.getState() == ControllerLocalState.BUSY) {
+//					needDecreasing = 1;
+//				}
+//				else {
+					log.warn("Line 735");
+					return ;					
+//				}
+			}
+			Set<Node> allNodes = getNodes();
+			if ( allNodes == null ) {
+				log.warn("allNodes is null");
+				return;
+			}
+			for( Node node: allNodes) {
+				int number = 0;
+				if ( loadMap.get(node) != null &&loadMap.get(node).size() != 0 ) {
+					List<Integer> list = new ArrayList<Integer>(loadMap.get(node));
+					if ( list != null ) {
+				    	for (Iterator<Integer> iterator = list.iterator(); iterator.hasNext();)
+				    	{
+				    		int val = iterator.next();
+				    		number += val; 
+				    	}
+				    	number /= list.size();
+					}				
+				}
+				statistics.add(new StatisticForSort(number, node));	
+				System.out.println(node + "=>" + number);
+			}
 			Collections.sort(statistics); // decreasing order.
 			
-			migratingPart = new HashSet<Node>();
 			for( int i = 0; i < statistics.size(); ++i) {
+				System.out.println(statistics.get(i).getNumber() + " : " + statistics.get(i).getNode());
 				migratingPart.add(statistics.get(i).getNode());
+				statisticsForLoad.put(statistics.get(i).getNode(), statistics.get(i).getNumber());
 				needDecreasing -= statistics.get(i).getNumber();
 				if ( needDecreasing <= 0 ) {
 					break;
@@ -735,22 +775,33 @@ public class LoadBalancedScheme extends AbstractScheme {
 		List<ControllerForSort> controllerForSort = new ArrayList<ControllerForSort>();
 		for(Iterator<Map.Entry<InetAddress, ControllerStateInCluster>> iter = controllerState.entrySet().iterator(); iter.hasNext();) {
 			Map.Entry<InetAddress, ControllerStateInCluster> entry = iter.next();
-			controllerForSort.add(new ControllerForSort(entry.getValue().getPacketInAvailable(), entry.getKey()));
+			if ( entry.getKey().equals(clusterServices.getMyAddress()) ) {
+				continue;
+			}
+			ControllerStateInCluster anotherController = entry.getValue();
+			if ( (anotherController.getState() == ControllerLocalState.NORMAL || anotherController.getState() == ControllerLocalState.IDLE) 
+					&& System.currentTimeMillis() - csic.getTimeStamp() >= MIGRATION_INTERVAL) {
+				controllerForSort.add(new ControllerForSort(anotherController.getPacketInAvailable(), entry.getKey()));
+			}
 		}
 		Collections.sort(controllerForSort);
-		int indexForCFS = 0;
+		
 		LinkedList<Node> list = new LinkedList<Node>(migratingPart);
+		LinkedList<ControllerForSort> controllerList = new LinkedList<ControllerForSort>(controllerForSort);
 		while ( list.size() > 0 ) {
-			ControllerForSort cfs = controllerForSort.get(0);
-			double val = cfs.getNumber();
-			Node node = list.peek();
-			int sfl = statisticsForLoad.get(node);
-			if ( needMigrateAll && val < sfl) {
-				list.poll();
-				log.warn("[migrate Fit Switch]: The current controller cannot sleep right now.");
+			if ( controllerList.size() == 0 ) {
+				log.info("[migrate Fit Switch]: should awake new controllers");
 				return;
 			}
-			if ( val < sfl) {
+			ControllerForSort cfs = controllerList.get(0);
+			double controllerPacketInAvailable = cfs.getNumber();
+			Node firstSwitch = list.peek();
+			int packetInNumber = statisticsForLoad.get(firstSwitch);
+			if ( needMigrateAll && controllerPacketInAvailable < packetInNumber) {
+				log.warn("[migrate Fit Switch]: The current controller cannot sleep right now because no other controller can take over {}.", firstSwitch);
+				return;
+			}
+			if ( controllerPacketInAvailable < packetInNumber) {
 				// TODO:
 				list.poll();
 				log.info("[migrate Fit Switch]: should reselect.");
@@ -758,21 +809,35 @@ public class LoadBalancedScheme extends AbstractScheme {
 			}
 
 			Set<Node> oneOps = new HashSet<Node>();
-			while ( val >=  sfl) {
+			double sum = 0.0d;
+		    System.out.println("line 810: controllerPacketInAvailable:"+controllerPacketInAvailable+" : "+packetInNumber);
+			for( Node node: list) {
+				if ( controllerPacketInAvailable <= 0 ) {
+					break;
+				}
 				Long rtt = controllerState.get(cfs.getAddr()).getRtt().get((Long)(node.getID()));
-				if ( node.getType() == "OF" &&  rtt != null && rtt <= rtt_upper_limit) {
+				int v = statisticsForLoad.get(node);
+				log.info("[migrate Fit Switch]: {} {} {}", v, rtt, node);
+				if (  node.getType() == "OF" &&  rtt != null && rtt <= rtt_upper_limit && controllerPacketInAvailable >= v ) {
 					oneOps.add(node);
-					val -= sfl;
+					sum += v;
+					controllerPacketInAvailable -= v;
 				}
 			}
+
+			log.info("[migrate Fit Switch]: prepare to migrate {} to {}", oneOps, cfs.getAddr());
 			Status status = migrateNodeToController(oneOps, cfs.getAddr());
 			if ( status.isSuccess() ) {
 				list.removeAll(oneOps);
+				for( Node node : oneOps) {
+					loadMap.remove(node);
+				}
+				controllerList.poll();
 				log.info("[migrate Fit Switch]: successful migrate {} to {}", oneOps, cfs.getAddr());
 			}
 			else {
 				log.info("[migrate Fit Switch]: {}", status.getDescription());
-				migrateFitSwitch(needMigrateAll, times+1);
+				migrateFitSwitch(needMigrateAll, times+1, csic, skip);
 			}
 		}
 	}
@@ -806,8 +871,16 @@ public class LoadBalancedScheme extends AbstractScheme {
 	                        return new Status(StatusCode.CONFLICT);
 		        		}
 		        	}
-	                clusterServices.tcommit();
 	        	}
+	        	ControllerStateInCluster oldState = controllerState.get(controller);
+	        	ControllerStateInCluster newState = new ControllerStateInCluster(oldState.getPacketInAvailable(), new HashMap<Long, Long>(oldState.getRtt()), oldState.getState());
+	        	newState.setTimeStamp(System.currentTimeMillis());
+	        	if ( !controllerState.replace(controller, oldState, newState)) {
+	        		clusterServices.trollback();
+ 					log.info("[migrate node to controller]: conflicts happened when migrating {} to {} ", nodes.toString(), controller.toString());
+                    return new Status(StatusCode.CONFLICT);
+	        	}
+                clusterServices.tcommit();
 	        }
 	        catch (Exception e) {
 	        	log.error("[migrate node to controller]: Exception in migrating Node to Controller {}", e);
@@ -872,17 +945,12 @@ public class LoadBalancedScheme extends AbstractScheme {
 	        return 1;  
 	    }  
 	}
-	
-	// TODO: get decreased part.
-	private int getDecreasedPart() {
-		return 0;
-	}
-	
+		
 	@Override
 	protected boolean loadBalancing(Node node) {
 		Long val = (Long)node.getID();
 		boolean result = isInitialMaster(val);
-		System.out.println("->>" + node + ":" + result);
+		System.out.println(val + " ==>" + result);
 		return result;
 	}
 
@@ -927,7 +995,7 @@ public class LoadBalancedScheme extends AbstractScheme {
     }
 
     private boolean isInitialMaster(long val) {
-        int tmpVal = (int)(val%weightSum);
+        int tmpVal = (int)((val&0xFF)%weightSum);
         if ( tmpVal == 0 ) {
         	tmpVal = weightSum;
         }
@@ -1008,6 +1076,12 @@ public class LoadBalancedScheme extends AbstractScheme {
         if (clusterServices == null ||  weightCache == null  || address == null) {
             return true;
         }
+		Iterator<Entry<InetAddress, Integer>> entries = getWeightCache().entrySet().iterator();    
+        while (entries.hasNext()) {
+        	Entry<InetAddress, Integer> entry = entries.next();
+        	System.out.print(entry.getKey() + ": " + entry.getValue() + "; ");
+        }
+    	System.out.println();
         Integer oldWeight = weightCache.get(address);
 
         try {
@@ -1103,5 +1177,8 @@ public class LoadBalancedScheme extends AbstractScheme {
         }
     }
     
+    public void setMaxPacketIns(int num) {
+    	LoadBalancedScheme.maxPacketIns = num;
+    }
     
 }

@@ -39,6 +39,10 @@ public class ControllerState {
 		return packetIns;
 	}
 
+	public void setPacketIns(double packetIns) {
+		this.packetIns = packetIns;
+	}
+
 	public long getProcessTime() {
 		return processTime;
 	}

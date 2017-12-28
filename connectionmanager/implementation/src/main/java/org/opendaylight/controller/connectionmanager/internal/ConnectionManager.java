@@ -39,6 +39,7 @@ import org.opendaylight.controller.clustering.services.IClusterGlobalServices;
 import org.opendaylight.controller.clustering.services.ICoordinatorChangeAware;
 import org.opendaylight.controller.connectionmanager.ConnectionMgmtScheme;
 import org.opendaylight.controller.connectionmanager.IConnectionManager;
+import org.opendaylight.controller.connectionmanager.loadbalanced.DERSSetting;
 import org.opendaylight.controller.connectionmanager.scheme.AbstractScheme;
 import org.opendaylight.controller.connectionmanager.scheme.LoadBalancedScheme;
 import org.opendaylight.controller.connectionmanager.scheme.SchemeFactory;
@@ -485,6 +486,27 @@ public class ConnectionManager implements IConnectionManager,
     	}
     }
     
+    public void _setForDERS(CommandInterpreter ci) {
+    	String command = ci.nextArgument();
+        AbstractScheme scheme = schemes.get(activeScheme);
+    	if ( scheme instanceof LoadBalancedScheme) {
+    		DERSSetting argument = DERSSetting.fromString(command.toUpperCase());
+    		if ( argument != null ) {
+    			if ( argument == DERSSetting.LW) {
+    				String nextWeight = ci.nextArgument();
+                    if (!((LoadBalancedScheme)scheme).setCurrentWeight(Integer.valueOf(nextWeight))) {
+                    	ci.println("Set Weight failed.");
+                    }
+    			}
+    			else if ( argument == DERSSetting.PI ) {
+    				String nextWeight = ci.nextArgument();
+                    ((LoadBalancedScheme)scheme).setMaxPacketIns(Integer.valueOf(nextWeight));
+    			}
+    		}
+    	}
+    	
+    }
+    
     public void _printLW(CommandInterpreter ci) {
         AbstractScheme scheme = schemes.get(activeScheme);
     	if ( scheme instanceof LoadBalancedScheme) {
@@ -495,5 +517,12 @@ public class ConnectionManager implements IConnectionManager,
 	        }
     	}
     	ci.println();
+    }
+    
+    public void _startLB(CommandInterpreter ci) {
+        AbstractScheme scheme = schemes.get(activeScheme);
+    	if ( scheme instanceof LoadBalancedScheme) {
+    		((LoadBalancedScheme)scheme).startCheckTask();
+    	}
     }
 }

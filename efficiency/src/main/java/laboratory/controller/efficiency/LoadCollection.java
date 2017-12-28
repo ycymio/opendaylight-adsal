@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -183,22 +184,20 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
         } 
         else if (fmtPkt.getPayload() instanceof IPv4) {
             final IPv4 ipv4 = (IPv4) fmtPkt.getPayload();
-        	log.debug("\t -- " + numsOfPacketIn + " -- ");
             NodeConnector incoming_connector = inPkt.getIncomingNodeConnector();
             Node snode = incoming_connector.getNode();
             // load collecting here.
             // Maybe concurrency happens, but the effect of this is small.
             
             numsOfPacketIn.incrementAndGet();
-            // log.debug("nums of packet_in: {}", numsOfPacketIn);
             if ( !loadMap.containsKey(snode)) {
             	loadMap.putIfAbsent(snode, new AtomicInteger(1));
             }
             else {
             	loadMap.get(snode).incrementAndGet();
             }
+            int num = loadMap.get(snode).get();
             try {
-
                 int srip = ipv4.getSourceAddress(), dvip = ipv4.getDestinationAddress();
                 InetAddress sIP = NetUtils.getInetAddress(srip);
                 InetAddress dIP = NetUtils.getInetAddress(dvip);
@@ -257,14 +256,15 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
 //                	}
                 	List<Edge> list = go.getEdges();
                 	if ( list.size() != 0 ) {
-                    	Edge edge = list.get(0);
-                		NodeConnector sec = edge.getTailNodeConnector();
-                		Node hnode = sec.getNode();
-                		List<Action> acts = new ArrayList<Action>(1);
-                		acts.add(new Output(sec));
-                		installFlow("LoadBalance", new Flow(smatch.clone(), acts), hnode);
+                		for( Edge edge: list) {
+                			NodeConnector sec = edge.getTailNodeConnector();
+                			Node hnode = sec.getNode();
+                    		List<Action> acts = new ArrayList<Action>(1);
+                    		acts.add(new Output(sec));
+                    		installFlow("LoadBalance", new Flow(smatch.clone(), acts), hnode);
+                		}
                         RawPacket rp = this.dataPacketService.encodeDataPacket(ipv4.getParent());
-                        // rp.setOutgoingNodeConnector(sec);
+//                        rp.setOutgoingNodeConnector(sec);
                         rp.setOutgoingNodeConnector(host.getnodeConnector());
                         this.dataPacketService.transmitDataPacket(rp);
                 	}
@@ -292,6 +292,9 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
           	    processTime.addAndGet(endTime-startTime);
             }
         }
+//        else {
+//        	log.info("others: {}", fmtPkt.getPayload());
+//        }
         return PacketResult.IGNORED;
     }
     
@@ -309,8 +312,16 @@ public class LoadCollection implements CommandProvider, ITopologyManagerAware, I
     	return processTime.getAndSet(0L);
     }
     
-    public static Map<Node, AtomicInteger> getLoadMap() {
+    public static Map<Node, AtomicInteger> getAndRenewLoadMap() {
     	Map<Node, AtomicInteger> clonedMap = new HashMap<Node, AtomicInteger>(loadMap); // forbidding the modification of loadMap.
+
+		Iterator<Map.Entry<Node, AtomicInteger>> entries = loadMap.entrySet().iterator();
+		ConcurrentMap<Node, AtomicInteger> newMap = new ConcurrentHashMap<Node, AtomicInteger>();
+        while (entries.hasNext()) {
+        	Map.Entry<Node, AtomicInteger> entry = entries.next();
+        	newMap.put(entry.getKey(), new AtomicInteger(0));
+        }
+        loadMap = newMap;
     	return clonedMap;
     }
     

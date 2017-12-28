@@ -28,7 +28,7 @@ public class ControllerStateInCluster implements Serializable {
 	public double getPacketInAvailable() {
 		return packetInAvailable;
 	}
-
+	
 	public Map<Long, Long> getRtt() {
 		return rtt;
 	}
@@ -48,4 +48,9 @@ public class ControllerStateInCluster implements Serializable {
 				+ timeStamp + ", state=" + state + "]\n";
 	}
 
+	public String str() {
+		return "ControllerStateInCluster [packetInAvailable="
+				+ packetInAvailable +  ", timeStamp="
+				+ timeStamp + ", state=" + state + "]\n";
+	}
 }
